@@ -18,19 +18,23 @@
 输出 #1
 
 16
+
+AC!
 */
 
 #include <iostream>
 #include <cstdio>
 #include <cstring>
 #include <algorithm>
+#include <bitset>
+using std::bitset;
 using std::cout; using std::cin; using std::endl;
 const int MAXN = 9, INF = 0x7fffffff;
 
-long long f[MAXN + 1][MAXN + 1][(1<<MAXN) + 2] = {0};//f[第几行][这行有几个][这行的状态]
+long long f[MAXN + 1][MAXN*MAXN + 10][(1<<MAXN) + 2] = {0};//f[第几行][这行加上前面有几个][这行的状态]
 int n, k, num, pre_val[(1<<MAXN) + 2], pre_s[(1<<MAXN) + 2]; // pre_val[状态值] = 这个状态中 1 的个数， pre_s[num] = 一个状态
 
-int count1(int a);
+int count1(unsigned int a);
 int pre_all();
 int main()
 {
@@ -46,22 +50,24 @@ int main()
             for (int nj = 0; nj < num; ++nj)// state of line i - 1
             {
                 int sj = pre_s[nj];
-                if (!( ( (si<<1) | (si>>1) | si) & sj) ) // illegaled
+                if ( !( ( (sj<<1) | (sj>>1) | sj) & si ) ) // legaled
                 {
-                    continue;
+                    for (int j = 0; j <= k; ++j) // j is used kings now
+                    {
+                        if (pre_val[si] <= j)
+                        {
+                            f[i][j][si] += f[i-1][j - pre_val[si] ][sj];
+                            //cout<<i<<" is i "<<j<<" is j "<<j - pre_val[si]<<" is j - pre_val[si] "<<f[i-1][j - pre_val[si] ][sj]<<endl;
+                        }
+                    }
+                    //cout << 111111<<endl;
                 }
-
-                for (int j = 0; j <= k; ++j) // j is used kings now
-                {
-                    f[i][j][si] += f[i-1][j - pre_val[si] ][sj];
-                }
-
             }
         }
     }
 
     long long ans = 0;
-    for (int i = 0; i < n; ++i)//add the last line
+    for (int i = 0; i < num; ++i)//add the last line
     {
         ans += f[n][k][pre_s[i] ];
     }
@@ -69,7 +75,7 @@ int main()
     cout << ans << endl;
 }
 
-int count1(int a)
+int count1(unsigned int a)
 {
     int bits = 0;
     while (a)
@@ -87,6 +93,7 @@ int pre_all()
         if (!( ( (i<<1) | (i >>1) ) & i ) )
         {
             pre_s[num++] = i;
+            //cout<<pre_val[i]<<" "<<num<<" "<<bitset<8>(i)<<endl<<endl;
         }
     }
 }
