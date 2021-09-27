@@ -1,2 +1,3 @@
-# MyCodeOnLuogu
-All my code of algorithm topic on https://luogu.com.cn
+# My OI code
+
+All my code of OI. Most of them are on <https://www.luguo.com.cn>
