@@ -13,11 +13,7 @@ private:
     bool negative;
 public:
 
-<<<<<<< HEAD
     enum {POWER = 6, BASE = 1000000};
-=======
-    enum {POWER = 4, BASE = 10000};
->>>>>>> ad309419ade9bdf5ef9dad26845b6b44b919778b
 
     // init begin::
     BigInt(): negative(false){}
