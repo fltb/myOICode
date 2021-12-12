@@ -73,9 +73,9 @@ int main()
     cin >> n;
     init();
     
-    for (int len = 2; len < arr_cur; ++len)
+    for (int len = 2; len <= arr_cur; ++len)
     {
-        for (int i = 1; i + len - 1 < 2; ++i)
+        for (int i = 1; i + len - 1 <= arr_cur; ++i)
         {
             int j = i + len - 1;
             if (arr[i].type == arr[j].type)
