@@ -1,14 +1,12 @@
 #include <cstddef>
 #include <iostream>
-#include <vector>
 #include <string>
 #include <memory>
 using std::cout;
-using std::cin;
 using std::unique_ptr;
 using std::string;
-using std::vector;
 
+template<typename T>
 class TrieTree
 {
 private:
@@ -21,15 +19,27 @@ private:
     };
     struct Node
     {
-        int sonsum;
-        int val;
+        int has_bit;
+        T val;
         unique_ptr<Node> sons[CHAR_NUM];
-        vector<int> has;
         Node()
         {
-            val = 0;
-            sonsum = 0;
-            has = vector<int>(CHAR_NUM, 0);
+            has_bit = 0;
+        }
+
+        bool ifhas(int key)
+        {
+            return (1<<key) & has_bit;
+        }
+
+        void addhas(int key)
+        {
+            has_bit |= (1<<key);
+        }
+
+        void rmhas(int key)
+        {
+            has_bit ^= (1<<key);
         }
 
         int tokey(char ch)
@@ -48,7 +58,7 @@ private:
         bool has_son(char ch)
         {
             int key = tokey(ch);
-            if (!has[key])
+            if (!ifhas(key))
             {
                 return false;
             }
@@ -61,7 +71,7 @@ private:
         Node & son(char ch)
         {
             int key = tokey(ch);
-            if (!has[key])
+            if (!ifhas(key))
             {
                 throw NO_SON;
             }
@@ -71,10 +81,9 @@ private:
         void push_son(char ch)
         {
             int key = tokey(ch);
-            if (!has[key])
+            if (!ifhas(key))
             {
-                sonsum++;
-                has[key] = true;
+                addhas(key);
                 sons[key] = unique_ptr<Node>(new Node());
             }
         }
@@ -82,19 +91,23 @@ private:
         void rm_son(char ch)
         {
             int key = tokey(ch);
-            if (has[key])
+            if (ifhas(key))
             {
-                if (sons[key]->sonsum > 0)
+                if (sons[key]->has_bit > 0)
                 {
                     throw SON_HAS_VAL;
                 }
-                sonsum--;
-                has[key] = false;
+                rmhas(key);
                 delete sons[key].release();
             }
         }
     };
     unique_ptr<Node> root;
+
+    Node & find(const string & str, size_t cur, Node & now);
+    Node & push(const string & str, size_t cur, Node & now);
+    int pop(const string & str, size_t cur, Node & now);
+
 public:
 
     TrieTree()
@@ -102,75 +115,14 @@ public:
         root = unique_ptr<Node>(new Node());
     }
 
-    // return val, if not find is 0
-    int find(const string & str, size_t cur, Node & now)
+    T & operator[](const string & str)
     {
-        if (cur >= str.size())
-        {
-            return now.val;
-        }
-        char key = str[cur];
-        if (now.has_son(key))
-        {
-            return find(str, cur + 1, now.son(key));
-        }
-        else
-        {
-            return 0;
-        }
+        return find(str, 0, *root).val;
     }
 
-    int find(const string & str)
+    T & push(const string & str)
     {
-        return find(str, 0, *root);
-    }
-
-    int push(const string & str, size_t cur, Node & now)
-    {
-        if (cur > str.size())
-        {
-            throw "WHAT???";
-        }
-        if (cur == str.size())
-        {
-            now.val++;
-            return 0;
-        }
-        char key = str[cur];
-        now.push_son(key);
-        return push(str, cur + 1, now.son(key));
-    }
-
-    int push(const string & str)
-    {
-        return push(str, 0, *root);
-    }
-
-    int pop(const string & str, size_t cur, Node & now)
-    {
-        if (cur > str.size())
-        {
-            throw "WHAT???";
-        }
-        if (cur == str.size())
-        {
-            now.val--;
-            return 0;
-        }
-        char key = str[cur];
-        if (now.has_son(key))
-        {
-            Node & son = now.son(key);
-            return pop(str, cur + 1, son);
-            if (son.val == 0 && son.sonsum == 0)
-            {
-                now.rm_son(key);
-            }
-        }
-        else
-        {
-            return -1;
-        }
+        return push(str, 0, *root).val;
     }
 
     int pop(const string & str)
@@ -180,19 +132,81 @@ public:
 
 };
 
+template<typename T>
+typename TrieTree<T>::Node & TrieTree<T>::find(const string & str, size_t cur, TrieTree::Node & now)
+{
+    if (cur >= str.size())
+    {
+        return now;
+    }
+    char key = str[cur];
+    if (now.has_son(key))
+    {
+        return find(str, cur + 1, now.son(key));
+    }
+    else
+    {
+        return push(str, cur, now);
+    }
+}
+
+template<typename T>
+typename TrieTree<T>::Node & TrieTree<T>::push(const string & str, size_t cur, TrieTree::Node & now)
+{
+    if (cur > str.size())
+    {
+        throw "WHAT???";
+    }
+    if (cur == str.size())
+    {
+        return now;
+    }
+    char key = str[cur];
+    now.push_son(key);
+    return push(str, cur + 1, now.son(key));
+}
+
+template<typename T>
+int TrieTree<T>::pop(const string & str, size_t cur, TrieTree::Node & now)
+{
+    if (cur > str.size())
+    {
+        throw "WHAT???";
+    }
+    if (cur == str.size())
+    {
+        now.val--;
+        return 0;
+    }
+    char key = str[cur];
+    if (now.has_son(key))
+    {
+        Node & son = now.son(key);
+        return pop(str, cur + 1, son);
+        if (son.val == 0 && son.has_bit == 0)
+        {
+            now.rm_son(key);
+        }
+    }
+    else
+    {
+        return -1;
+    }
+}
+
 int main()
 {
-    TrieTree tr;
-    tr.push("sbc");
-    tr.push("ash");
-    tr.push("as");
-    tr.push("as");
+    TrieTree<int> tr;
+    tr["sbc"] = 1;
+    tr["ash"] = 1;
+    tr["as"] = 1;
+    tr["as"]++;
     
-    cout << tr.find("ash") << "\n";
-    cout << tr.find("as") << "\n";
+    cout << tr["ash"] << "\n";
+    cout << tr["as"] << "\n";
 
     tr.pop("sbc");
 
-    cout << tr.find("sbc") << "\n";
+    cout << tr["sbc"] << "\n";
     return 0;
 }
