@@ -1,8 +1,10 @@
 #include <cstddef>
 #include <iostream>
+#include <vector>
 #include <string>
 #include <memory>
 using std::cout;
+using std::vector;
 using std::unique_ptr;
 using std::string;
 
@@ -20,10 +22,11 @@ private:
     struct Node
     {
         int has_bit;
-        T val;
+        unique_ptr<T> val_ptr;
         unique_ptr<Node> sons[CHAR_NUM];
         Node()
         {
+            val_ptr = nullptr;
             has_bit = 0;
         }
 
@@ -103,9 +106,9 @@ private:
         }
     };
     unique_ptr<Node> root;
-
-    Node & find(const string & str, size_t cur, Node & now);
-    Node & push(const string & str, size_t cur, Node & now);
+    vector<T> vals;
+    T & find(const string & str, size_t cur, Node & now);
+    T & push(const string & str, size_t cur, Node & now);
     int pop(const string & str, size_t cur, Node & now);
 
 public:
@@ -117,12 +120,12 @@ public:
 
     T & operator[](const string & str)
     {
-        return find(str, 0, *root).val;
+        return find(str, 0, *root);
     }
 
     T & push(const string & str)
     {
-        return push(str, 0, *root).val;
+        return push(str, 0, *root);
     }
 
     int pop(const string & str)
@@ -133,11 +136,15 @@ public:
 };
 
 template<typename T>
-typename TrieTree<T>::Node & TrieTree<T>::find(const string & str, size_t cur, TrieTree::Node & now)
+T & TrieTree<T>::find(const string & str, size_t cur, TrieTree::Node & now)
 {
     if (cur >= str.size())
     {
-        return now;
+        if (now.val_ptr == nullptr)
+        {
+            now.val_ptr = unique_ptr<T>(new T());
+        }
+        return *now.val_ptr;
     }
     char key = str[cur];
     if (now.has_son(key))
@@ -151,7 +158,7 @@ typename TrieTree<T>::Node & TrieTree<T>::find(const string & str, size_t cur, T
 }
 
 template<typename T>
-typename TrieTree<T>::Node & TrieTree<T>::push(const string & str, size_t cur, TrieTree::Node & now)
+T & TrieTree<T>::push(const string & str, size_t cur, TrieTree::Node & now)
 {
     if (cur > str.size())
     {
@@ -159,7 +166,11 @@ typename TrieTree<T>::Node & TrieTree<T>::push(const string & str, size_t cur, T
     }
     if (cur == str.size())
     {
-        return now;
+        if (now.val_ptr == nullptr)
+        {
+            now.val_ptr = unique_ptr<T>(new T());
+        }
+        return *now.val_ptr;
     }
     char key = str[cur];
     now.push_son(key);
@@ -175,15 +186,14 @@ int TrieTree<T>::pop(const string & str, size_t cur, TrieTree::Node & now)
     }
     if (cur == str.size())
     {
-        now.val--;
         return 0;
     }
     char key = str[cur];
     if (now.has_son(key))
     {
         Node & son = now.son(key);
-        return pop(str, cur + 1, son);
-        if (son.val == 0 && son.has_bit == 0)
+        pop(str, cur + 1, son);
+        if (son.has_bit == 0)
         {
             now.rm_son(key);
         }
@@ -192,6 +202,7 @@ int TrieTree<T>::pop(const string & str, size_t cur, TrieTree::Node & now)
     {
         return -1;
     }
+    return 0;
 }
 
 int main()
