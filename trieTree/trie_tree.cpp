@@ -1,12 +1,14 @@
 #include <cstddef>
 #include <iostream>
-#include <vector>
+#include <array>
 #include <string>
+#include <vector>
 #include <memory>
+using std::cin;
 using std::cout;
-using std::vector;
 using std::unique_ptr;
 using std::string;
+using std::vector;
 
 template<typename T>
 class TrieTree
@@ -21,13 +23,13 @@ private:
     };
     struct Node
     {
-        int has_bit;
+        int has_bit, des_sum;
         unique_ptr<T> val_ptr;
         unique_ptr<Node> sons[CHAR_NUM];
         Node()
         {
             val_ptr = nullptr;
-            has_bit = 0;
+            des_sum = has_bit = 0;
         }
 
         bool ifhas(int key)
@@ -107,10 +109,10 @@ private:
     };
     unique_ptr<Node> root;
     vector<T> vals;
-    T & find(const string & str, size_t cur, Node & now);
     T & push(const string & str, size_t cur, Node & now);
     int pop(const string & str, size_t cur, Node & now);
-
+    void update_sum(const string & str, size_t cur, Node & now);
+    int get_sum(const string & str, size_t cur, Node & now);
 public:
 
     TrieTree()
@@ -120,7 +122,7 @@ public:
 
     T & operator[](const string & str)
     {
-        return find(str, 0, *root);
+        return push(str, 0, *root);
     }
 
     T & push(const string & str)
@@ -133,28 +135,37 @@ public:
         return pop(str, 0, *root);
     }
 
+    int size()
+    {
+        return root->des_sum;
+    }
+
+    int size(const string & str)
+    {
+        return get_sum(str, 0, *root);
+    }
+
 };
 
 template<typename T>
-T & TrieTree<T>::find(const string & str, size_t cur, TrieTree::Node & now)
+void TrieTree<T>::update_sum(const string & str, size_t cur, TrieTree::Node & now)
 {
     if (cur >= str.size())
     {
-        if (now.val_ptr == nullptr)
-        {
-            now.val_ptr = unique_ptr<T>(new T());
-        }
-        return *now.val_ptr;
+        return;
     }
-    char key = str[cur];
-    if (now.has_son(key))
+    now.des_sum++;
+    update_sum(str, cur + 1, now.son(str[cur]));
+}
+
+template<typename T>
+int TrieTree<T>::get_sum(const string & str, size_t cur, TrieTree::Node & now)
+{
+    if (cur >= str.size())
     {
-        return find(str, cur + 1, now.son(key));
+        return now.des_sum;
     }
-    else
-    {
-        return push(str, cur, now);
-    }
+    return get_sum(str, cur + 1, now.son(str[cur]));
 }
 
 template<typename T>
@@ -168,6 +179,7 @@ T & TrieTree<T>::push(const string & str, size_t cur, TrieTree::Node & now)
     {
         if (now.val_ptr == nullptr)
         {
+            update_sum(str, 0, *root);
             now.val_ptr = unique_ptr<T>(new T());
         }
         return *now.val_ptr;
@@ -213,6 +225,8 @@ int main()
     tr["as"] = 1;
     tr["as"]++;
     
+    cout << "size:" << tr.size() << "\n";
+    cout << "size a:" << tr.size("a") << "\n";
     cout << tr["ash"] << "\n";
     cout << tr["as"] << "\n";
 
