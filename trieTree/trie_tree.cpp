@@ -8,158 +8,88 @@ using std::cin;
 using std::cout;
 using std::unique_ptr;
 using std::string;
-using std::vector;
+using std::shared_ptr;
 
-template<typename T>
-class TrieTree
+template<typename T, typename N>
+class BaseTrieTree
 {
 private:
-    enum
-    {
-        NO_SON,
-        NOT_A_CHAR,
-        SON_HAS_VAL,
-        CHAR_NUM = 26 + 1
-    };
-    struct Node
-    {
-        int has_bit, des_sum;
-        unique_ptr<T> val_ptr;
-        unique_ptr<Node> sons[CHAR_NUM];
-        Node()
-        {
-            val_ptr = nullptr;
-            des_sum = has_bit = 0;
-        }
 
-        bool ifhas(int key)
-        {
-            return (1<<key) & has_bit;
-        }
+    virtual T & push(const string & str, size_t cur, N & now);
+    virtual int pop(const string & str, size_t cur, N & now);
+    virtual void update_sum(const string & str, size_t cur, N & now);
+    virtual void update_rm_sum(const string & str, size_t cur, N & now);
+    virtual bool find(const string & str, size_t cur, N & now);
+    virtual int get_sum(const string & str, size_t cur, N & now);
 
-        void addhas(int key)
-        {
-            has_bit |= (1<<key);
-        }
+protected:
 
-        void rmhas(int key)
-        {
-            has_bit ^= (1<<key);
-        }
+    shared_ptr<N> root;
 
-        int tokey(char ch)
-        {
-            if (ch >= 'a' && ch <= 'z')
-            {
-                return ch - 'a';
-            }
-            if (ch >= 'A' && ch <= 'Z')
-            {  
-                return ch - 'A';
-            }
-            throw NOT_A_CHAR;
-        }
-
-        bool has_son(char ch)
-        {
-            int key = tokey(ch);
-            if (!ifhas(key))
-            {
-                return false;
-            }
-            else
-            {
-                return true;    
-            }
-        }
-
-        Node & son(char ch)
-        {
-            int key = tokey(ch);
-            if (!ifhas(key))
-            {
-                throw NO_SON;
-            }
-            return *sons[key];
-        }
-
-        void push_son(char ch)
-        {
-            int key = tokey(ch);
-            if (!ifhas(key))
-            {
-                addhas(key);
-                sons[key] = unique_ptr<Node>(new Node());
-            }
-        }
-
-        void rm_son(char ch)
-        {
-            int key = tokey(ch);
-            if (ifhas(key))
-            {
-                if (sons[key]->has_bit > 0)
-                {
-                    throw SON_HAS_VAL;
-                }
-                rmhas(key);
-                delete sons[key].release();
-            }
-        }
-    };
-    unique_ptr<Node> root;
-    vector<T> vals;
-    T & push(const string & str, size_t cur, Node & now);
-    int pop(const string & str, size_t cur, Node & now);
-    void update_sum(const string & str, size_t cur, Node & now);
-    int get_sum(const string & str, size_t cur, Node & now);
 public:
 
-    TrieTree()
+    BaseTrieTree()
     {
-        root = unique_ptr<Node>(new Node());
+        root = unique_ptr<N>(new N());
     }
 
-    T & operator[](const string & str)
-    {
-        return push(str, 0, *root);
-    }
+    virtual ~BaseTrieTree(){}
 
-    T & push(const string & str)
+    virtual T & operator[](const string & str)
     {
         return push(str, 0, *root);
     }
 
-    int pop(const string & str)
+    virtual T & push(const string & str)
+    {
+        return push(str, 0, *root);
+    }
+
+    virtual int pop(const string & str)
     {
         return pop(str, 0, *root);
     }
 
-    int size()
+    virtual int size()
     {
         return root->des_sum;
     }
 
-    int size(const string & str)
+    virtual int size(const string & str)
     {
         return get_sum(str, 0, *root);
     }
 
+    virtual bool exsist(const string & str)
+    {
+        return find(str, 0, *root);
+    }
 };
 
-template<typename T>
-void TrieTree<T>::update_sum(const string & str, size_t cur, TrieTree::Node & now)
+template<typename T, typename N>
+void BaseTrieTree<T, N>::update_sum(const string & str, size_t cur, N & now)
 {
+    now.des_sum++;
     if (cur >= str.size())
     {
         return;
     }
-    now.des_sum++;
     update_sum(str, cur + 1, now.son(str[cur]));
 }
 
-template<typename T>
-int TrieTree<T>::get_sum(const string & str, size_t cur, TrieTree::Node & now)
+template<typename T, typename N>
+void BaseTrieTree<T, N>::update_rm_sum(const string & str, size_t cur, N & now)
+{
+    now.des_sum--;
+    if (cur >= str.size())
+    {
+        return;
+    }
+    update_rm_sum(str, cur + 1, now.son(str[cur]));
+}
+
+template<typename T, typename N>
+int BaseTrieTree<T, N>::get_sum(const string & str, size_t cur, N & now)
 {
     if (cur >= str.size())
     {
@@ -168,8 +98,26 @@ int TrieTree<T>::get_sum(const string & str, size_t cur, TrieTree::Node & now)
     return get_sum(str, cur + 1, now.son(str[cur]));
 }
 
-template<typename T>
-T & TrieTree<T>::push(const string & str, size_t cur, TrieTree::Node & now)
+template<typename T, typename N>
+bool BaseTrieTree<T, N>::find(const string & str, size_t cur, N & now)
+{
+    if (cur >= str.size())
+    {
+        return !(now.val_ptr == nullptr);
+    }
+    char key = str[cur];
+    if (now.has_son(key))
+    {
+        return find(str, cur + 1, now.son(key));
+    }
+    else
+    {
+        return false;
+    }
+}
+
+template<typename T, typename N>
+T & BaseTrieTree<T, N>::push(const string & str, size_t cur, N & now)
 {
     if (cur > str.size())
     {
@@ -189,8 +137,8 @@ T & TrieTree<T>::push(const string & str, size_t cur, TrieTree::Node & now)
     return push(str, cur + 1, now.son(key));
 }
 
-template<typename T>
-int TrieTree<T>::pop(const string & str, size_t cur, TrieTree::Node & now)
+template<typename T, typename N>
+int BaseTrieTree<T, N>::pop(const string & str, size_t cur, N & now)
 {
     if (cur > str.size())
     {
@@ -198,12 +146,13 @@ int TrieTree<T>::pop(const string & str, size_t cur, TrieTree::Node & now)
     }
     if (cur == str.size())
     {
+        update_rm_sum(str, 0, *root);
         return 0;
     }
     char key = str[cur];
     if (now.has_son(key))
     {
-        Node & son = now.son(key);
+        N & son = now.son(key);
         pop(str, cur + 1, son);
         if (son.has_bit == 0)
         {
@@ -217,6 +166,106 @@ int TrieTree<T>::pop(const string & str, size_t cur, TrieTree::Node & now)
     return 0;
 }
 
+template<typename T>
+struct Node
+{
+    enum
+    {
+        NO_SON,
+        NOT_A_CHAR,
+        SON_HAS_VAL,
+        CHAR_NUM = 26 + 1
+    };
+    int has_bit, des_sum;
+    unique_ptr<T> val_ptr;
+    shared_ptr<Node> sons[CHAR_NUM];
+    Node()
+    {
+        val_ptr = nullptr;
+        des_sum = has_bit = 0;
+    }
+
+    bool ifhas(int key)
+    {
+        return (1<<key) & has_bit;
+    }
+
+    void addhas(int key)
+    {
+        has_bit |= (1<<key);
+    }
+
+    void rmhas(int key)
+    {
+        has_bit ^= (1<<key);
+    }
+
+    int tokey(char ch)
+    {
+        if (ch >= 'a' && ch <= 'z')
+        {
+            return ch - 'a';
+        }
+        if (ch >= 'A' && ch <= 'Z')
+        {  
+            return ch - 'A';
+        }
+        throw NOT_A_CHAR;
+    }
+
+    bool has_son(char ch)
+    {
+        int key = tokey(ch);
+        if (!ifhas(key))
+        {
+            return false;
+        }
+        else
+        {
+            return true;    
+        }
+    }
+
+    Node & son(char ch)
+    {
+        int key = tokey(ch);
+        if (!ifhas(key))
+        {
+            throw NO_SON;
+        }
+        return *sons[key];
+    }
+
+    void push_son(char ch)
+    {
+        int key = tokey(ch);
+        if (!ifhas(key))
+        {
+            addhas(key);
+            sons[key] = unique_ptr<Node>(new Node());
+        }
+    }
+
+    void rm_son(char ch)
+    {
+        int key = tokey(ch);
+        if (ifhas(key))
+        {
+            if (sons[key]->has_bit > 0)
+            {
+                throw SON_HAS_VAL;
+            }
+            rmhas(key);
+            sons[key].reset();
+        }
+    }
+};
+
+template<typename T>
+class TrieTree : public BaseTrieTree<T, Node<T> >
+{
+};
+
 int main()
 {
     TrieTree<int> tr;
@@ -227,11 +276,14 @@ int main()
     
     cout << "size:" << tr.size() << "\n";
     cout << "size a:" << tr.size("a") << "\n";
+    cout << "size ash" << tr.size("ash") << "\n";
     cout << tr["ash"] << "\n";
     cout << tr["as"] << "\n";
 
+    cout << std::to_string(tr.exsist("a")) << " " << std::to_string(tr.exsist("as")) << "\n";
+
     tr.pop("sbc");
 
-    cout << tr["sbc"] << "\n";
+    cout << "size: " << tr.size();
     return 0;
 }
