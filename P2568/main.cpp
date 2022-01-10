@@ -1,76 +1,55 @@
 #include <iostream>
-#include <vector>
 #include <cmath>
 using std::cin;
 using std::cout;
-using std::vector;
-using std::sqrt;
 /*
 思路：
 已知： 若 gcd(a, b) == 1 则 gcd(a * p, b * p) == p (p 为质数)
 */
+const int MAXN = 10 + 2;
 
-int gcd(int a, int b)
-{
-    return b > 0 ? gcd(b, a % b) : a;
-}
+double phi[MAXN];
+long long sum[MAXN];
+bool prime[MAXN];
 
-void get_prime(vector<int> & v, int n)
+int main()
 {
+    int n;
+    cin >> n;
     // 先假设全部是质数
-    vector<bool> tmp = vector<bool>(n + 2, true);
-    for (int i = 2; i <= sqrt(n); i++)
+    for (int i = 1; i <= n; i++)
     {
-        if (tmp[i])
+        phi[i] = i;
+        prime[i] = true;
+    }
+    // 1 不是质数
+    prime[1] = false;
+    for (int i = 2; i <= n; i++)
+    {
+        if (prime[i])
         {
-            for (int j = 1; i * j <= n; ++j)
+            phi[i] = i - 1;
+            for (int j = 2; i * j <= n; ++j)
             {
-                tmp[i * j] = false;
+                prime[i * j] = false;
+                // v 是当前的这个数的质因数个数
+                phi[i * j] *= 1.0 - 1.0 / i;
             }
         }
     }
     // 现在质数是 true，偶数 false
+    sum[1] = 1ll;
     for (int i = 2; i <= n; i++)
     {
-        if (tmp[i])
-        {
-            v.push_back(i);
-        }
+        sum[i] = sum[i - 1] + 1ll * (int(phi[i])) * 2;
     }
-}
-
-void Eular(vector<long long> & euler, int n)
-{
-    euler = vector<long long>(n + 2, 0);
-    euler[1] = 1;
-    int cnt = 0;
-    vector<bool> vis = vector<bool>(n + 2, false);
-    for(int i = 2; i <= n; i++)
+    long long ans = 0;
+    for (int i = 2; i <= n; ++i)
     {
-        if (!vis[i])
+        if (prime[i])
         {
-            euler[++cnt] = i;
-        }
-        for (int j = 1; j <= cnt; j++)
-        {
-            if (i * euler[j] > n)
-            {
-                break;
-            }
-            vis[i * euler[j]] = true;
-            if (i % euler[j] == 0)
-            {
-                break;
-            }
+            ans += sum[n / i];
         }
     }
-}
-int main()
-{
-    int n;
-    vector<int> primes;
-    cin >> n;
-    get_prime(primes, n);
-    vector<long long> eular;
-    Eular(eular, n);
+    cout << ans << "\n";
 }
