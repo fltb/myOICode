@@ -38,7 +38,6 @@ Node graph[MAXN];
 int n, m;
 
 long long f[MAXN*2][MAXN];
-long long bag01[MAXN];
 int cSZ[MAXN*2];
 void dfs(int eid, int fa)
 {
@@ -56,7 +55,6 @@ void dfs(int eid, int fa)
         dfs(ceid, CE.from);
         cSZ[eid] += cSZ[ceid];
     }
-    std::memset(bag01, -1, sizeof(bag01));
     // to bag
     for (int ceid : graph[tid].eids)
     {
@@ -70,7 +68,7 @@ void dfs(int eid, int fa)
             leaf = false;
             for (int j = 0; j <= min(cSZ[eid], m); j++)
             {
-                bag01[j] = f[ceid][j];
+                f[eid][j] = f[ceid][j];
             }
             continue;
         }
@@ -78,9 +76,9 @@ void dfs(int eid, int fa)
         {
             for (int k = 0; k <= min(j, cSZ[ceid]); k++)
             {
-                if (bag01[j-k] != -1) 
+                if (f[eid][j-k] != -1) 
                 {
-                    bag01[j] = max(bag01[j], f[ceid][k] + bag01[j-k]);
+                    f[eid][j] = max(f[eid][j], f[ceid][k] + f[eid][j-k]);
                 }
             }
         }
@@ -97,11 +95,11 @@ void dfs(int eid, int fa)
         {
             const long long val = (long long)((j) * (m - j) + (cSZ[eid] - j) * (n - m - (cSZ[eid] - j))) * E.val;
             // 和这条边直接相连的点是白色或者黑色
-            f[eid][j] = max(bag01[j] + val, bag01[j - 1] + val);
+            f[eid][j] = max(f[eid][j] + val, f[eid][j - 1] + val);
         }
         // j == 0
         const long long val = (long long)((0) * (m - 0ll) + (cSZ[eid] - 0) * (n - m - (cSZ[eid] - 0))) * E.val;
-        f[eid][0] = bag01[0] + val;
+        f[eid][0] = f[eid][0] + val;
     }
 }
 

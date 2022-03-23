@@ -87,8 +87,6 @@ void dfs(int now)
 
 int main()
 {
-    freopen("brackets.in", "r", stdin);
-    freopen("brackets.out", "w", stdout);
     std::ios::sync_with_stdio(false);
     cin >> n;
     cin.get();
