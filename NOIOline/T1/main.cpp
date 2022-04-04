@@ -49,7 +49,8 @@ struct NodeJS {
 class DStack{
 public:
     std::stack<NodeJS> st;
-    int Sum[MAXN][MAXN], Tan[MAXN], cur=1;
+    std::vector<int> Sum[MAXN];
+    int cur=1, start[MAXN];
     void mypush(const NodeJS & item)
     {
         if (st.empty() || item < st.top())
@@ -64,12 +65,14 @@ public:
             }
             st.push(item);
         }
+        start[cur] = st.size();
         for (int i = 1; i <= cur; i++)
         {
-            Sum[i][cur] = Sum[i][cur-1] + int(st.size() - i <= 1);
-            # ifdef FLOATINGBLOCKS
-            cout << "Sum " << i << " " << cur << " " << Sum[i][cur] << "\n";
-            # endif
+            if (st.size() <= start[i])
+            {
+                // update
+                Sum[i].push_back(cur);   
+            }
         }
         cur++;
     }
@@ -97,7 +100,12 @@ int main()
     {
         int l, r;
         cin >> l >> r;
-        cout << my.Sum[l][r] << "\n";
+        auto & sum = my.Sum[l];
+        auto it = std::upper_bound(sum.begin(), sum.end(), r);
+        auto ans = 0;
+        ans += it - sum.begin();
+        cout << "    FND " << *it << " NOW " << l << " " << r << "\n";
+        cout << ans << "\n";
     }
     return 0;
 }
