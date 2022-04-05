@@ -8,11 +8,14 @@
                 "-g",
                 "${file}",
                 "-o",
-                "${workspaceRoot}/excute/${fileBasenameNoExtension}"
+                "${workspaceFolder}/excute/${fileBasenameNoExtension}"
             ],
             "options": {
-                "cwd": "${workspaceRoot}/excute"
+                "cwd": "${fileDirname}"
             },
+            "problemMatcher": [
+                "$gcc"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
