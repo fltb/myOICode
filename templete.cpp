@@ -2,6 +2,12 @@
 #include <algorithm>
 using std::cin;
 using std::cout;
+template <typename T> inline void read(T& t) {
+    int f = 0, c = getchar(); t = 0;
+    while (!isdigit(c)) f |= c == '-', c = getchar();
+    while (isdigit(c)) t = t * 10 + c - 48, c = getchar();
+    if (f) t = -t;
+}
 template<typename T>
 T max(T a, T b)
 {
