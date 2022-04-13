@@ -15,7 +15,26 @@ T min(T a, T b)
 
 struct Range {
     int l, r, val;
-    Range(int l_ = 0, int r_ = 0, int val_ = 1) : l(l_), r(r_), val(val_) {} 
+    bool flag;
+    Range(int l_ = 0, int r_ = 0, int val_ = 0, bool flag_ = true) : l(l_), r(r_), val(val_), flag(flag_) {} 
+    bool operator<(const Range & x) const 
+    {
+        if (flag ^ x.flag)
+        {
+            return !flag;
+        }
+        else
+        {
+            if (flag)
+            {
+                return val < x.val;
+            }
+            else
+            {
+                return !(val < x.val);
+            }
+        }
+    }
 };
 const int MAXN = 2e5 + 2;
 int arr[MAXN];
@@ -41,50 +60,63 @@ int main()
         }
         auto ans = Range();
         auto now = Range();
-        
+        bool flag = false;
+        auto is2 = [](int x) {  return int(x == 2 || x == -2);  };
         for (int i = 0; i < n; i++)
         {
+            if (arr[i] != 0)
+            {
+                now.val += is2(arr[i]);
+                now.flag = ((now.flag && arr[i] > 0) || (!now.flag && arr[i] < 0));
+            }
             if (arr[i] == 0 || i + 1 == n)
             {
+                if (arr[i] == 0)
+                {
+                    now.r--;
+                }
+                if (now.l > now.r)
+                {
+                    continue;
+                }
                 // 分割当前数组
-                
-                if (now.val < 0)
+                if (!now.flag)
                 {
                     int l = now.l, r = now.r;
-                    int cntl = 1, cntr = 1;
-                    while (0 < arr[l])
-                    {
-                        cntl *= arr[l];
+                    int cntl = 0, cntr = 0;
+
+                    while (0 < arr[l]) {
+                        cntl += is2(arr[l]);
                         l++;
                     }
-                    while (0 < arr[r])
-                    {
-                        cntr *= arr[r];
+                    cntl += is2(arr[l]);
+
+                    while (0 < arr[r]) {
+                        cntr += is2(arr[r]);
                         r--;
                     }
-                    if (cntl * arr[l] < cntr * arr[r]) 
+                    cntr += is2(arr[r]);
+
+                    if (cntr < cntl) 
                     {
                         // 删掉右侧留下的大
-                        now = Range(now.l, r, now.val / cntr);
+                        now = Range(now.l, r - 1, now.val - cntr, true);
                     }
                     else
                     {
-                        now = Range(l, now.r, now.val / cntl);
+                        now = Range(l + 1, now.r, now.val - cntl, true);
                     }
                 }
-                if (ans.val < now.val)
+                if (ans < now)
                 {
-                    ans = now;
+                    ans = now; flag = true;
                 }
-                now = Range(i + 1, i + 1, 1);
+                now = Range(i + 1, i + 1, 0, true);
+                continue;
             }
-            else
-            {
-                now.val *= arr[i];
-                now.r = i;
-            }
+            now.r++;
         }
-        cout << ans.l << (n - ans.r - 1) << "\n";
+        cout << ans.l << " " << ( flag ? (n - ans.r - 1) : n) << "\n";
     }
     return 0;
 }
