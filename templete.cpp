@@ -1,19 +1,21 @@
+#include <ios>
 #include <iostream>
+#include <cstdio>
 #include <algorithm>
 using std::cin;
 using std::cout;
 template <typename T> inline void read(T& t) {
-    int f = 0, c = getchar(); t = 0;
-    while (!isdigit(c)) f |= c == '-', c = getchar();
-    while (isdigit(c)) t = t * 10 + c - 48, c = getchar();
+    int f = 0, c = std::getchar(); t = 0;
+    while (!std::isdigit(c)) f |= c == '-', c = std::getchar();
+    while (std::isdigit(c)) t = t * 10 + c - 48, c = std::getchar();
     if (f) t = -t;
 }
-template<typename T>
+template<typename T> inline
 T max(T a, T b)
 {
     return a < b ? b : a;
 }
-template<typename T>
+template<typename T> inline
 T min(T a, T b)
 {
     return a < b ? a : b;
@@ -46,3 +48,9 @@ public:
         return i <= 0;
     }
 };
+int main()
+{
+    std::ios::sync_with_stdio(false);
+
+    return 0;
+}
