@@ -53,7 +53,7 @@ int upperSreach(int val, int lc, int rc)
 {
     int l = lc, r = rc;
     int mid = (l + r) / 2, pos = r + 1;
-    while (l <= r)
+    while (l < r)
     {
         mid = (l + r) / 2;
         if (sum[mid] - sum[lc - 1] > val)
