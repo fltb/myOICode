@@ -54,6 +54,7 @@ void update(int & dp1, const int & dp2)
 
 int getVal(const int cur, const int curNxt)
 {
+    // ERR: 忘了初始化的条件了
     if (cur == 0) {  return 0; }
     return stu[cur].v ^ stu[curNxt].v;
 }
@@ -94,6 +95,8 @@ int main()
 
                 现在，开始！
             */
+
+            // ERR final: stNow <= MAX_STATE 导致了越界，所以出问题了
             for (auto stNow = 0; stNow < MAX_STATE; stNow++)
             {                
                 for (auto pos = -8; pos <= 7; pos++)
@@ -116,6 +119,7 @@ int main()
                         // 右边第几个插队
                         for (auto to = 0; to <= 7; to++)
                         {
+                            // ERR 之前写成 to << 1 了，所以这次换 jump 变量
                             const auto jump = (1 << to);
                             if (jump & stNow) // 已经有了
                             {
@@ -141,6 +145,7 @@ int main()
         auto ans = INF;
         for (auto i = -8; i <= 0; i++)
         {
+            // ERR 这里忘了 dc
             update(ans, dp[n][1][dc(i)]);
         }
 
