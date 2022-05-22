@@ -20,6 +20,16 @@ void update(T & val, const T & addVal)
 {
     val = (val + addVal) % MOD;
 }
+
+class MinerArr {
+    long long arr[MAXN * 2];
+public:
+    long long & operator[](int cur)
+    {
+        return arr[cur + MAXN];
+    }
+};
+
 /*
 -------食材
 |
@@ -43,13 +53,14 @@ void update(T & val, const T & addVal)
     f[方法][特殊食物数量][其他食物数量]
 */
 int input[MAXN][MAXM], sum[MAXN];
-long long f[2][MAXN][MAXN];
+
+MinerArr f[2];
 int main()
 {
     std::ios::sync_with_stdio(false);
     int n, m;
     cin >> n >> m;
-
+    // ERR total = 0 乘法更新初始化 0
     long long total = 1, wrong = 0;
     for (int i = 1; i <= n; i++)
     {
@@ -64,46 +75,32 @@ int main()
 
     for (int food = 1; food <= m; food++)
     {
-        for (int i = 0; i <= n; i++)
+        for (int i = -1 * n; i <= n; i++)
         {
-            for (int j = 0; j <= n; j++)
-            {
-                f[0][i][j] = f[1][i][j] = 0;
-            }
+            f[0][i] = f[1][i] = 0;
         }
 
-        f[0][0][0] = 1;
+        f[0][0] = 1;
 
         // 枚举不同方法
         for (int method = 1; method <= n; method++)
         {
-            for (int mainFoodMethod = 0; mainFoodMethod <= method; mainFoodMethod++)
-            {
-                for (int otherFoodMethod = 0; otherFoodMethod <= method - mainFoodMethod; otherFoodMethod++)
+            for (int difference = -1 * method; difference <= method; difference++)
+           {
+                const int me = method % 2, pme = (method + 1) % 2, df = difference;
+                f[me][df] = f[pme][df];
+                if (df + MAXN - 1 >= 0)
                 {
-                    const int me = method % 2, pme = (method + 1) % 2, mf = mainFoodMethod, of = otherFoodMethod;
-
-                    f[me][mf][of] = f[pme][mf][of];
-                    if (mf > 0)
-                    {
-                        update(f[me][mf][of], f[pme][mf - 1][of] * input[method][food] % MOD);
-                    }
-                    if (of > 0)
-                    {
-                        update(f[me][mf][of], f[pme][mf][of - 1] * ((sum[method] - input[method][food] + MOD) % MOD) % MOD);
-                    }
+                    // ERR f[me] = f[me] 应该后面是 pme
+                    // ERR input[me][food] 应该是 method， 因为前者 mod 过
+                    update(f[me][df], f[pme][df - 1] * input[method][food] % MOD);
                 }
+                update(f[me][df], f[pme][df + 1] * ((sum[method] - input[method][food] + MOD) % MOD) % MOD);
             }
         }
-        for (int mainFoodMethod = 1; mainFoodMethod <= n; mainFoodMethod++)
+        for (int difference = 1; difference <= n; difference++)
         {
-            for (int otherFoodMethod = 0; otherFoodMethod <= n - mainFoodMethod; otherFoodMethod++)
-            {
-                if (mainFoodMethod > otherFoodMethod)
-                {
-                    update(wrong, f[n%2][mainFoodMethod][otherFoodMethod]);
-                }
-            }
+            update(wrong, f[n%2][difference]);
         }
     }
 
