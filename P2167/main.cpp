@@ -3,13 +3,18 @@
 #include <ios>
 #include <iostream>
 #include <cstdio>
+#include <string>
 #include <cstring>
 #include <algorithm>
+#include <cmath>
+#include <utility>
 using std::cin;
 using std::cout;
 using std::strcpy;
 using std::strlen;
 using std::strcmp;
+using std::islower;
+using std::log2;
 template<typename T> inline
 T max(T a, T b)
 {
@@ -20,21 +25,7 @@ T min(T a, T b)
 {
     return a < b ? a : b;
 }
-const int MAXN = 15, MAXS = 50 + 1, MOD = 1000003;
-struct NodeJS {
-    int vue;
-    char spring[MAXS];
-    NodeJS(int v_=0, const char * src=nullptr) : vue(v_){
-        if (src == nullptr)
-        {
-            strcpy(spring, "#");
-        }
-        else
-        {
-            strcpy(spring, src);
-        }
-    }
-};
+const int MAXN = 15, MAXS = 50 + 2, MOD = 1000003;
 
 inline auto getBits(int x)
 {
@@ -47,160 +38,122 @@ inline auto getBits(int x)
     return cnt;
 }
 
+int n, k, l;
+
+int total, upLimit, record[MAXN], cnt;
+std::string input[MAXN];
+void dfs(int now, int has)
+{
+    if (now == n + 1)
+    {
+        if (has != upLimit)
+        {
+            return;
+        }
+        long long tmpVal = 1ll;
+        for (int j = 0; j < l; j++)
+        {
+            char la = '?';
+            for (int i = 1; i <= upLimit; i++)
+            {
+                    if (input[record[i]][j] != '?')
+                    {
+                        if (la == '?')
+                        {
+                            la = input[record[i]][j];
+                        }
+                        else if (la != input[record[i]][j])
+                        {
+                            return;
+                        }
+                    }
+            }
+            if (la == '?')
+            {
+                tmpVal = tmpVal * 26 % MOD;
+            }
+        }
+        total += tmpVal;
+        total %= MOD;
+        return;
+    }
+    if (has < upLimit)
+    {
+        record[++cnt] = now;
+        dfs(now + 1, has + 1);
+        record[cnt--] = 0;
+    }
+    if (n - now >= upLimit - has)
+    {
+        dfs(now + 1, has);
+    }
+}
 /*
-考虑使用 dp 的做法
-首先确定 dp[state] = { str, val}
-一下情况转移：
-    总体用暴力，总原理：
-    Sum(符合 A 不符合 B) = Sum(符合 A ) - Sum (符合 A + B) 
-    令 A + B = U
-    这样只需要求恰好完全符合的了。
-
-    下一步，统计符合状态 X 的总个数。
-        设 Y 为上一状态，str 为 a??b??c
-        当前的 str 为 a?bb???
-
-        合并之后应该是 a?bb??c, val = 1 * 26 * 1 * 1 * 26 * 26 * 1
-    还有要统计“炸了”的，即这种情况：
-        aabc?a
-        b?????
-    res=###### val = 0
-
-    那么每一步合并字符串 + 统计，如果失败就全部设置成 #
-*/
-NodeJS dp[1<<13];
-int ans[1<<13];
+学了容斥之后回来的
+二个循环
+第一个生成字符串 统计对应的式子匹配上的数量的情况数量
+第二个统计答案*/
 int main()
 {
     std::ios::sync_with_stdio(false);
+    int C[MAXN][MAXN];
+    for (int i = 0; i < MAXN; i++)
+    {
+        C[i][0] = 1;
+        for (int j = 0; j <= i; j++)
+        {
+            // C(n, m) = C(n-1, m-1) + C(n-1, m)
+            C[i][j] = (C[i-1][j-1] + C[i-1][j]) % MOD;
+        }
+    }
+
     int t;
     cin >> t;
     while(t--)
     {
-        char input[MAXN][MAXS];
-
-        int n, k;
+        long long ans[MAXN];
+        for (int i = 0; i < MAXN; i++)
+        {
+            ans[i] = 0;
+        }
         cin >> n >> k;
 
-        auto cnting = 0;
-        while (cnting < n)
+        auto cnting = 1;
+        while (cnting <= n)
         {
-            char line [MAXS]; 
-            cin.getline(line, MAXS);
+            std::string line;
+            std::getline(cin, line);
             cin.get();
-
-            if (strcmp(line,"") != 0)
+            if (line != "")
             {
-                strcpy(input[cnting], line);
+                input[cnting] = line;
                 cnting++;
             }
         }
-        auto l = strlen(input[0]);
+        l = input[0].length();
 
-        if (k > n) // failed
+        // 最后容斥答案
+        for (int i = n; i >= k; i--)
         {
-            cout << "0\n";
-            continue;
-        }
-
-        char strTmp[MAXS];
-        for (int i = 0; i < l; i++)
-        {
-            strTmp[i] = '?';
-        }
-        strTmp[n] = '\0';
-        dp[0] = NodeJS(0, strTmp);
-
-        for (int st = 0; st < (1 << n); st++)
-        {
-            char * chNow = dp[st].spring;
-            for (int bit = 0; bit < n; bit++)
+            upLimit = i;
+            total = 0;
+            dfs(1, 0);
+            auto sum = 0ll;
+            for (int j = i + 1; j <= n; j++)
             {
-                const auto stBit = (1 << bit);
-                if (stBit & st)
-                {
-                    const auto preSt = st ^ stBit;
-                    const char * chPre = dp[preSt].spring;
-
-                    if (chPre[0] == '#')
-                    {
-                        // 先前就不合法，自己也别挣扎了
-                        strcpy(chNow, "#");
-                        dp[st].vue = 0;
-                        continue;
-                    }
-
-                    auto failed = false;
-                    for (int i = 0; i < l; i++)
-                    {
-                        if (input[bit][i] != '?' && chPre[i] != '?' && input[bit][i] != chPre[i])
-                        {
-                            // 当前对应的串不相等了，而且都不是 ?，那就是完了（
-                            failed = true;
-                            break;
-                        }
-                        else
-                        {
-                            chNow[i] = input[bit][i];
-                            if (chPre[i] != '?')
-                            {
-                                chNow[i] = chPre[i];
-                            }
-                        }
-                    }
-
-                    if (failed)
-                    {
-                        strcpy(chNow, "#");
-                        dp[st].vue = 0;
-                    }
-                    else
-                    {
-                        auto vue = 1;
-
-                        for (int i = 0; i < l; i++)
-                        {
-                            vue *= (chNow[i] == '?' ? 26 : 1);
-                            vue %= MOD;
-                        }
-
-                        dp[st].vue = vue;
-                    }
-
-                    // 根据理想情况，那些子状态转过来的都是一样的，别的不算了
-                    break;
-                }
+                sum = (sum + C[j][i] * ans[j] % MOD) % MOD;
             }
+            ans[i] = (total + MOD - sum) % MOD;
         }
-
-        // 开始按照开头的统计答案了
-        auto aaa = 0;
-        for (int st = 0; st < (1 << n); st++)
-        {
-            for (int stPre = 0; stPre < (1 << n); stPre++)
-            {
-                if (!((st ^ stPre) & st))
-                {
-                    const auto cnts = getBits(st ^ stPre);
-                    ans[st] = (ans[st] + ((cnts >> 1) ? -1 : 1) * cnts * dp[stPre].vue + MOD) % MOD;
-                    if (getBits(st) == n-k)
-                    {
-                        aaa += ans[st];
-                    }
-                }
-            }
-        }
-        cout << aaa << "\n";
+        cout << ans[k] << "\n";
     }
     
     return 0;
 }
 
 /*
-
 1100
 1100-1110-1101+1111
 
 1110
-
 */
