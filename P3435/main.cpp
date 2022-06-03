@@ -48,7 +48,7 @@ int main()
         }
         kmp[i] = k;
     }
-    int ans = 0;
+    long long ans = 0;
     for (int i = 1; i < n; i++)
     {
         int j = i;
