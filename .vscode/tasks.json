@@ -8,7 +8,9 @@
                 "-g",
                 "${file}",
                 "-o",
-                "${workspaceFolder}/excute/${fileBasenameNoExtension}"
+                "${workspaceFolder}/excute/${fileBasenameNoExtension}",
+                "-D",
+                "FLOATINGBLOCKS"
             ],
             "options": {
                 "cwd": "${fileDirname}"
