@@ -48,6 +48,7 @@ class BigInt
     const BigInt operator*(const BigInt& x) const;
     const BigInt operator/(const BigInt& x) const;
     const BigInt operator/(const int x) const;
+    const BigInt operator%(const int x) const;
     const BigInt operator%(const BigInt& x) const;
     // calculation end::
 
