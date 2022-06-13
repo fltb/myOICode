@@ -1,45 +1,45 @@
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <string>
 #include <vector>
-using std::cout;
 using std::cin;
+using std::cout;
 using std::endl;
 
 class BigInt
 {
-private: 
+   private:
     std::vector<int> arr;
     bool negative;
-public:
 
-    enum {POWER = 4, BASE = 10000};
-
+   public:
+    static const int POWER = 4;
+    static const int BASE = 10000;
     // init begin::
-    BigInt(): negative(false){}
-    ~BigInt(){}
-    const BigInt & operator=(const BigInt & x);
-    BigInt(const BigInt & x){ *this = x;}
-    BigInt(const int x) { *this = BigInt(std::to_string(x) ); };
+    BigInt() : negative(false) {}
+    ~BigInt() {}
+    const BigInt& operator=(const BigInt& x);
+    BigInt(const BigInt& x) { *this = x; }
+    BigInt(const int x) { *this = BigInt(std::to_string(x)); };
     BigInt(const std::string x);
     // init end::
 
     // calculation begin::
-    const BigInt operator+(const BigInt & x) const;
-    const BigInt operator-(const BigInt & x) const;
-    const BigInt operator*(const BigInt & x) const;
-    const BigInt operator/(const BigInt & x) const;
-    const BigInt operator%(const BigInt & x) const;
+    const BigInt operator+(const BigInt& x) const;
+    const BigInt operator-(const BigInt& x) const;
+    const BigInt operator*(const BigInt& x) const;
+    const BigInt operator/(const BigInt& x) const;
+    const BigInt operator/(const int x) const;
+    const BigInt operator%(const BigInt& x) const;
     // calculation end::
 
     // comparation begin::
-    bool operator<(const BigInt & x) const;
-    bool operator==(const BigInt & x) const;
+    bool operator<(const BigInt& x) const;
+    bool operator==(const BigInt& x) const;
     // comparation end::
 
     // output
-    friend std::ostream & operator<<(std::ostream & os, const BigInt & x);
-
+    friend std::ostream& operator<<(std::ostream& os, const BigInt& x);
 };
 
 BigInt::BigInt(const std::string x)
@@ -54,22 +54,18 @@ BigInt::BigInt(const std::string x)
     }
     len = x.length();
     cur = len;
-    //cout << "x = " << x << endl;
     while (cur > begin)
     {
         --cur;
         int pow = (len - cur) % BigInt::POWER;
-        //cout << "pow = " << pow <<endl;
         aaa += cnt * (x[cur] - '0');
         cnt *= 10;
-        //cout << "aaa = " << aaa << endl;
         if (0 == pow)
         {
             arr.push_back(aaa);
             aaa = 0;
             cnt = 1;
         }
-        
     }
     if (aaa)
     {
@@ -77,14 +73,15 @@ BigInt::BigInt(const std::string x)
     }
 }
 
-const BigInt & BigInt::operator=(const BigInt & x)
+const BigInt& BigInt::operator=(const BigInt& x)
 {
     negative = x.negative;
-    if(!x.arr.empty()) arr = std::vector<int>(x.arr);
+    if (!x.arr.empty())
+        arr = std::vector<int>(x.arr);
     return (*this);
 }
 
-const BigInt BigInt::operator+(const BigInt & x) const
+const BigInt BigInt::operator+(const BigInt& x) const
 {
     BigInt now = BigInt();
     if (x.arr.empty())
@@ -95,28 +92,10 @@ const BigInt BigInt::operator+(const BigInt & x) const
     {
         return x;
     }
-    /*
-    if (negative && x.negative)
-    {
-        now.negative = true;
-    }
-    else if (negative)
-    {
-        now = *this;
-        now.negative = false;
-        return x - now;
-    }
-    else
-    {
-        now = x;
-        now.negative = false;
-        return now - x;
-    }
-    */
     auto it1 = arr.begin();
     auto it2 = x.arr.begin();
-    int  aaa = 0;
-    while (it1 != arr.end() && it2 != x.arr.end() )
+    int aaa = 0;
+    while (it1 != arr.end() && it2 != x.arr.end())
     {
         aaa += *it1 + *it2;
         now.arr.push_back(aaa % BigInt::BASE);
@@ -128,17 +107,17 @@ const BigInt BigInt::operator+(const BigInt & x) const
     {
         if (it1 != arr.end())
         {
-            now.arr.push_back(*it1 + aaa%BigInt::BASE);
+            now.arr.push_back(*it1 + aaa % BigInt::BASE);
             aaa /= BigInt::BASE;
             ++it1;
         }
         else if (it2 != x.arr.end())
         {
-            now.arr.push_back(*it2 + aaa%BigInt::BASE);
+            now.arr.push_back(*it2 + aaa % BigInt::BASE);
             aaa /= BigInt::BASE;
             ++it2;
         }
-        else 
+        else
         {
             now.arr.push_back(aaa);
         }
@@ -160,7 +139,7 @@ const BigInt BigInt::operator+(const BigInt & x) const
     return now;
 }
 
-const BigInt BigInt::operator-(const BigInt & x) const
+const BigInt BigInt::operator-(const BigInt& x) const
 {
     BigInt now = BigInt();
     if (x.arr.empty())
@@ -173,25 +152,6 @@ const BigInt BigInt::operator-(const BigInt & x) const
         now.negative = true;
         return now;
     }
-    /*
-    if (negative && x.negative)
-    {
-        now = x;
-        now.negative = false;
-        return now + (*this);
-    }
-    else if (negative)
-    {
-        now = x;
-        now.negative = true;
-        return (*this) + now;
-    }
-    else
-    {
-        now = x;
-        now.negative = false;
-        return now + (*this);
-    }*/
 
     if ((*this) < x)
     {
@@ -202,17 +162,17 @@ const BigInt BigInt::operator-(const BigInt & x) const
 
     auto it1 = arr.begin();
     auto it2 = x.arr.begin();
-    int  aaa = 0;
-    while (it2 != x.arr.end() )
+    int aaa = 0;
+    while (it2 != x.arr.end())
     {
         aaa += *it1 - *it2;
         if (aaa < 0)
         {
-            now.arr.push_back(aaa+BigInt::BASE);
+            now.arr.push_back(aaa + BigInt::BASE);
             aaa -= BigInt::BASE;
             aaa /= BigInt::BASE;
         }
-        else 
+        else
         {
             now.arr.push_back(aaa);
             aaa /= BigInt::BASE;
@@ -226,11 +186,11 @@ const BigInt BigInt::operator-(const BigInt & x) const
         aaa += *it1;
         if (aaa < 0)
         {
-            now.arr.push_back(aaa+BigInt::BASE);
+            now.arr.push_back(aaa + BigInt::BASE);
             aaa -= BigInt::BASE;
             aaa /= BigInt::BASE;
         }
-        else 
+        else
         {
             now.arr.push_back(aaa);
             aaa /= BigInt::BASE;
@@ -242,28 +202,26 @@ const BigInt BigInt::operator-(const BigInt & x) const
         now.arr.pop_back();
     }
     return now;
-
 }
 
-const BigInt BigInt::operator*(const BigInt & x) const
+const BigInt BigInt::operator*(const BigInt& x) const
 {
     if (arr.empty() || x.arr.empty())
     {
         return BigInt(0);
     }
     BigInt now = BigInt();
-    now.arr = std::vector<int>(arr.size()+x.arr.size());
-    if (negative ^ x.negative) // xor
+    now.arr = std::vector<int>(arr.size() + x.arr.size());
+    if (negative ^ x.negative)  // xor
     {
         now.negative = true;
     }
 
     auto it1 = arr.begin();
     auto it2 = x.arr.begin();
-    int  aaa = 0, cnt = 0, cur = 0;
-    while (it2 != x.arr.end() )
+    int aaa = 0, cnt = 0, cur = 0;
+    while (it2 != x.arr.end())
     {
-        
         while (it1 != arr.end())
         {
             now.arr[cur + cnt] += aaa + ((*it1) * (*it2));
@@ -272,7 +230,7 @@ const BigInt BigInt::operator*(const BigInt & x) const
             ++cnt;
             ++it1;
         }
-        now.arr[cur+cnt] = aaa;
+        now.arr[cur + cnt] = aaa;
         aaa = 0;
         cnt = 0;
         it1 = arr.begin();
@@ -286,13 +244,45 @@ const BigInt BigInt::operator*(const BigInt & x) const
     return now;
 }
 
-bool BigInt::operator==(const BigInt & x) const
+const BigInt BigInt::operator/(int x) const
+{
+    if (arr.empty() || x == 0)
+    {
+        return BigInt(0);
+    }
+    BigInt now = BigInt();
+    if (x < 0)
+    {
+        now.negative = !negative;
+        x = 0 - x;
+    }
+    now.arr = std::vector<int>(arr.size(), 0);
+    auto it = arr.end();
+    auto it2 = now.arr.end();
+
+    int yu = 0;
+    do {
+        --it;
+        --it2;
+        *it2 = (*it + yu * BASE) / x;
+        yu = (*it + yu * BASE) % x;
+    } while (it != arr.begin());
+
+    while (!now.arr.empty() && now.arr.back() == 0)
+    {
+        now.arr.pop_back();
+    }
+
+    return now;
+}
+
+bool BigInt::operator==(const BigInt& x) const
 {
     if (arr.size() != x.arr.size())
     {
         return false;
     }
-    if (negative ^ x.negative) // xor
+    if (negative ^ x.negative)  // xor
     {
         return false;
     }
@@ -310,7 +300,7 @@ bool BigInt::operator==(const BigInt & x) const
     return true;
 }
 
-bool BigInt::operator<(const BigInt & x) const
+bool BigInt::operator<(const BigInt& x) const
 {
     if (arr.size() < x.arr.size())
     {
@@ -319,6 +309,10 @@ bool BigInt::operator<(const BigInt & x) const
     else if (!(arr.size() == x.arr.size()))
     {
         return false;
+    }
+    if (!arr.size() || !x.arr.size())
+    {
+        return arr.size() < x.arr.size();
     }
     if (negative && (!x.negative))
     {
@@ -356,9 +350,7 @@ bool BigInt::operator<(const BigInt & x) const
     return false;
 }
 
-
-
-std::ostream & operator<<(std::ostream & os, const BigInt & x) 
+std::ostream& operator<<(std::ostream& os, const BigInt& x)
 {
     if (x.arr.empty())
     {
@@ -375,7 +367,7 @@ std::ostream & operator<<(std::ostream & os, const BigInt & x)
     {
         --it;
         os << std::setfill('0') << std::setw(BigInt::POWER) << *it;
-    } 
+    }
     return os;
 }
 
@@ -386,21 +378,27 @@ int main()
     while (cin >> aa >> bb)
     {
         a = BigInt(aa);
-        b = BigInt(bb);
-        if (!( a+b == aa + bb ) )
+        int b = bb;
+        /*b = BigInt(bb);
+        if (!(a + b == aa + bb))
         {
             cout << "BAD+" << endl;
-            cout << "Right " << aa + bb <<" Wrong " << a + b  <<endl;
+            cout << "Right " << aa + bb << " Wrong " << a + b << endl;
         }
-        if (!( a-b == BigInt(aa - bb) ) )
+        if (!(a - b == BigInt(aa - bb)))
         {
             cout << "BAD-" << endl;
-            cout << "Right " << aa - bb <<" Wrong " << a - b <<endl;
+            cout << "Right " << aa - bb << " Wrong " << a - b << endl;
         }
-        if (!( a*b == BigInt(aa * bb) ) )
+        if (!(a * b == BigInt(aa * bb)))
         {
             cout << "BAD*" << endl;
-            cout << "Right " << aa * bb <<" Wrong " << a * b <<endl;
+            cout << "Right " << aa * bb << " Wrong " << a * b << endl;
+        }*/
+        if (!(a / b == BigInt(aa / bb)))
+        {
+            cout << "BAD/" << endl;
+            cout << "Right " << aa / bb << " Wrong " << a / b << endl;
         }
     }
     return 0;
