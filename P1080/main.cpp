@@ -1,25 +1,29 @@
+#include <algorithm>
+#include <cstdio>
+#include <iomanip>
 #include <ios>
 #include <iostream>
-#include <cstdio>
-#include <algorithm>
 #include <vector>
-#include <iomanip>
 
 using std::cin;
 using std::cout;
-template <typename T> inline void read(T& t) {
-    int f = 0, c = std::getchar(); t = 0;
+template <typename T>
+inline void read(T& t)
+{
+    int f = 0, c = std::getchar();
+    t = 0;
     while (!std::isdigit(c)) f |= c == '-', c = std::getchar();
     while (std::isdigit(c)) t = t * 10 + c - 48, c = std::getchar();
-    if (f) t = -t;
+    if (f)
+        t = -t;
 }
-template<typename T> inline
-T max(T a, T b)
+template <typename T>
+inline T max(T a, T b)
 {
     return a < b ? b : a;
 }
-template<typename T> inline
-T min(T a, T b)
+template <typename T>
+inline T min(T a, T b)
 {
     return a < b ? a : b;
 }
@@ -280,7 +284,8 @@ const BigInt BigInt::operator/(int x) const
     auto it2 = now.arr.end();
 
     int yu = 0;
-    do {
+    do
+    {
         --it;
         --it2;
         *it2 = (*it + yu * BASE) / x;
@@ -389,12 +394,13 @@ std::ostream& operator<<(std::ostream& os, const BigInt& x)
     }
     return os;
 }
-const int MAXN  = 1000 + 2;
+const int MAXN = 1000 + 2;
 struct Man
 {
-    BigInt l;int r;
-    Man(int l_=0, int r_=0) : l(l_), r(r_) {}
-    bool operator<(const Man & x)
+    BigInt l;
+    int r;
+    Man(int l_ = 0, int r_ = 0) : l(l_), r(r_) {}
+    bool operator<(const Man& x)
     {
         return l * r < x.l * x.r;
     }
@@ -411,13 +417,13 @@ int main()
         cin >> l >> r;
         mans[i] = Man(l, r);
     }
-    std::sort(mans+1, mans+n+1);
+    std::sort(mans + 1, mans + n + 1);
     BigInt aaa(mans[0].l);
     BigInt ans(0);
     for (int i = 1; i <= n; i++)
     {
         const auto& man = mans[i];
-        ans = max(ans, (aaa/man.r));
+        ans = max(ans, (aaa / man.r));
         aaa = aaa * man.l;
     }
     cout << ans << '\n';
