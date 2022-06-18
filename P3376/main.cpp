@@ -26,34 +26,31 @@ class GetNetFlow
     {
         int from, to, capacity, flow;
         MSEdge* opposite;
-        MSEdge(int from_ = 0, int to_ = 0, int capacity_ = 0, int flow_ = 0) : from(from_), to(to_), capacity(capacity_), flow(flow_), opposite(NULL) {}
+        MSEdge(int from_ = 0, int to_ = 0, int capacity_ = 0, int flow_ = 0) : from(from_), to(to_), capacity(capacity_), flow(flow_), opposite(nullptr) {}
     };
     size_t n;
     vector<vector<MSEdge*> > graph;
     vector<MSEdge> edges;
 
-    // ERR 因为变量的二次释放，被迫搞成这样
     // ERR 全部改成指针了
-    vector<int> flows;
-    vector<MSEdge*>  parentEdge;
    public:
-   ~GetNetFlow() {}
-    GetNetFlow() {}
-    void build(size_t n)
+    //ERR n 没有初始化
+    GetNetFlow(size_t n_) : n(n_), graph(n_ + 1, vector<MSEdge*>()), edges()
     {
-        graph = vector<vector<MSEdge*> >(n + 1, vector<MSEdge*>());
-        edges = vector<MSEdge>();
-        // ERR 这是 STL 的问题了
+        // ERR 为了解决这个玄学问题，只好出此下策
+        edges.push_back(MSEdge());
         edges.push_back(MSEdge());
     }
 
     void addEdge(int from, int to, int capacity)
     {
+        // ERR !!! 再次 push_back 之后，e1 指向的值变了！！！
+        // 而且只有第一次 push 会出问题！
         edges.push_back(MSEdge(from, to, capacity, 0));
-        auto * e1 = &edges.back();
+        auto* e1 = &edges.back();
         graph[from].push_back(e1);
         edges.push_back(MSEdge(to, from, 0, 0));
-        auto * e2 = &edges.back();
+        auto* e2 = &edges.back();
         graph[to].push_back(e2);
         e1->opposite = e2;
         e2->opposite = e1;
@@ -62,17 +59,17 @@ class GetNetFlow
     auto getMaxFlow(int s, int t)
     {
         auto allFlow = 0ll;
-        // 一个 BFS， 每次跑一个增广路，然后记下它的流量，扣除每条边的流量
-        flows = vector<int>(n + 1, 0);
-        parentEdge = vector<MSEdge*>(n + 1, 0);
+        vector<int> flows(n + 1, 0);
+        vector<MSEdge*> parentEdge(n + 1, nullptr);
 
-        auto finding = [&]()
-        {
+        // 一个 BFS， 每次跑一个增广路，然后记下它的流量，扣除每条边的流量
+
+        auto finding = [&]() {
             vector<bool> vis(n + 1, false);
             queue<size_t> js;
 
             js.push(s);
-            vis[s] = 1;
+            vis[s] = true;
             flows[s] = INF;
             while (!js.empty())
             {
@@ -115,20 +112,19 @@ class GetNetFlow
 
                 jump = pe->from;
 
-            // ERR jump == s
+                // ERR jump == s
             } while (jump != s);
         }
 
         return allFlow;
     }
 };
-GetNetFlow gf;
 int main()
 {
     std::ios::sync_with_stdio(false);
     int n, e, s, t;
     cin >> n >> e >> s >> t;
-    gf.build(n+1);
+    GetNetFlow gf(n + 1);
     for (int i = 0; i < e; i++)
     {
         int u, v, c;
@@ -136,6 +132,5 @@ int main()
         gf.addEdge(u, v, c);
     }
     cout << gf.getMaxFlow(s, t) << std::endl;
-    exit(0);
     return 0;
 }
