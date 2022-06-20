@@ -52,7 +52,7 @@ class GetNetFlow
         graph[to].push_back(e2);
     }
 
-    auto getMaxFlow(int s, int t)
+    long long getMaxFlow(int s, int t)
     {
         auto allFlow = 0ll;
         vector<int> flows(n + 1, 0);

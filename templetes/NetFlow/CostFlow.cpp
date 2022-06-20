@@ -37,7 +37,7 @@ class GetNetFlow
 
     // ERR 全部改成指针了
    public:
-    //ERR n 没有初始化
+    // ERR n 没有初始化
     GetNetFlow(size_t n_) : n(n_), graph(n_ + 1, vector<shared_ptr<MSEdge>>()) {}
 
     void addEdge(int from, int to, int capacity, int cost)
@@ -54,13 +54,13 @@ class GetNetFlow
     }
 
     /**
- * @brief Get the Max Flow and Minimal Costs
- * 
- * @param s 
- * @param t 
- * @return std::pair<long long, long long> - flows, costs
- */
-    auto getMaxFlow(int s, int t)
+     * @brief Get the Max Flow and Minimal Costs
+     *
+     * @param s
+     * @param t
+     * @return std::pair<long long, long long> - flows, costs
+     */
+    std::pair<long long, long long> getMaxFlow(int s, int t)
     {
         auto allFlow = 0ll, allCosts = 0ll;
         vector<int> distance(n + 1, INF);
@@ -68,7 +68,8 @@ class GetNetFlow
         vector<shared_ptr<MSEdge>> parentEdge(n + 1, nullptr);
 
         // 一个 Bellman-Flod，每次算一条可以达到的最短路，一直到全部都好了
-        auto bellmenFlod = [&]() {
+        auto bellmenFlod = [&]()
+        {
             distance = vector<int>(n + 1, INF);
             vector<int> cnting(n + 1, 0);
             vector<bool> inQueue(n + 1, false);
