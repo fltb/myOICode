@@ -5,12 +5,14 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <cstring>
 #include <queue>
 #include <string>
 #include <vector>
 using std::cin;
 using std::cout;
 using std::map;
+using std::memset;
 using std::queue;
 using std::shared_ptr;
 using std::string;
@@ -26,110 +28,55 @@ inline T min(T a, T b)
     return a < b ? a : b;
 }
 const int INF = 0x3f3f3f3f;
-class GetNetFlow
-{
-    struct MSEdge
-    {
-        int from, to, capacity, flow;
-        shared_ptr<MSEdge> opposite;
-        MSEdge(int from_ = 0, int to_ = 0, int capacity_ = 0, int flow_ = 0) : from(from_), to(to_), capacity(capacity_), flow(flow_), opposite(nullptr) {}
-    };
-    size_t n;
-    vector<vector<shared_ptr<MSEdge>>> graph;
 
-    // ERR 全部改成指针了
-   public:
-    // ERR n 没有初始化
-    GetNetFlow(size_t n_) : n(n_), graph(n_ + 1, vector<shared_ptr<MSEdge>>()) {}
-
-    void addEdge(int from, int to, int capacity)
-    {
-        if (from == to)
-        {
-            return;
-        }
-#ifdef FLOATINGBLOCK
-        cout << "edge " << from << " " << to << '\n';
-#endif
-        // ERR !!! edges 再次 push_back 之后，e1 指向的值变了！！！
-        // 而且只有第一次 push 会出问题！
-        // 所以我换成智能指针了
-        shared_ptr<MSEdge> e1(new MSEdge(from, to, capacity, 0));
-        shared_ptr<MSEdge> e2(new MSEdge(to, from, 0, 0));
-        e1->opposite = e2;
-        e2->opposite = e1;
-        graph[from].push_back(e1);
-        graph[to].push_back(e2);
-    }
-
-    long long getMaxFlow(int s, int t)
-    {
-        auto allFlow = 0ll;
-        vector<int> flows(n + 1, 0);
-        vector<shared_ptr<MSEdge>> parentEdge(n + 1, nullptr);
-
-        // 一个 BFS， 每次跑一个增广路，然后记下它的流量，扣除每条边的流量
-
-        auto finding = [&]()
-        {
-            vector<bool> vis(n + 1, false);
-            queue<size_t> js;
-
-            js.push(s);
-            vis[s] = true;
-            flows[s] = INF;
-            while (!js.empty())
-            {
-                // 取出队首节点，尝试它的所有边，看看能不能到达新的节点，如果可以，更新它的值，把它加进队列
-                const auto nd = js.front();
-                js.pop();
-
-                for (auto ep : graph[nd])
-                {
-                    auto u = ep->from, v = ep->to;
-                    if (ep->capacity > ep->flow && !vis[v])
-                    {
-                        vis[v] = true;
-                        flows[v] = min(flows[u], ep->capacity - ep->flow);
-                        parentEdge[v] = ep;
-                        js.push(v);
-                        if (v == t)
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        };
-
-        while (finding())
-        {
-            // 得到当前的流大小，加进统计当中，再把边更新一下
-            auto flow = flows[t];
-            allFlow += flows[t];
-            auto jump = t;
-            do
-            {
-#ifdef FLOATINGBLOCK
-                cout << "jumping " << jump << '\n';
-#endif
-                auto pe = parentEdge[jump];
-                auto peo = pe->opposite;
-
-                pe->flow += flow;
-                peo->flow -= flow;
-
-                jump = pe->from;
-
-                // ERR jump == s
-            } while (jump != s);
-        }
-
-        return allFlow;
-    }
+const int maxn = 400 + 6, maxm= 300 + 2;
+struct Edge{
+    long long int to, next, weight;
 };
-const int MAXN = 1000 + 6;
+Edge edges[maxm]; 
+long long int edge_cnt = 1, head[maxn];
+int n = maxn, s, t;
+
+void add(long long int x,long long  int y,long long int w){
+    edges[++edge_cnt].next = head[x];
+    edges[edge_cnt].to = y;
+    edges[edge_cnt].weight = w;
+    head[x] = edge_cnt;
+}
+
+long long int lasting[maxn], flow[maxn];
+bool bfs(){
+    std::memset(lasting, -1, sizeof(lasting));
+    queue<int> q;
+    q.push(s); 
+    flow[s] = INF;
+    while (!q.empty()){
+        long long int front = q.front();
+        q.pop();
+        if (front == t) break;
+        for (int eg = head[front]; eg != 0; eg = edges[eg].next){
+            long long int v = edges[eg].to, vol = edges[eg].weight;
+            if (lasting[v] == -1 && vol > 0){
+                lasting[v] = eg;
+                flow[v] = min(flow[front], vol);
+                q.push(v);
+            }
+        }
+    }
+    return (lasting[t] != -1);
+}
+
+long long int EK(){
+    long long int max_flow = 0;
+    while(bfs()){
+        for (int i = t; i != s; i = edges[lasting[i] ^ 1].to){
+            edges[lasting[i]].weight -= flow[t];
+            edges[lasting[i] ^ 1].weight += flow[t];
+        }
+        max_flow += flow[t];
+    }
+    return max_flow;
+}
 int main()
 {
     std::ios::sync_with_stdio(false);
@@ -141,7 +88,6 @@ int main()
     cin >> T;
     while (T--)
     {
-        GetNetFlow gf(MAXN);
         int n;
         cin >> n;
         int cnting = 1;
@@ -185,7 +131,7 @@ int main()
                 prttt(plug);
 #endif
             }
-            gf.addEdge(st2i[name], st2i[plug], INF);
+            add(st2i[name], st2i[plug], INF);
 
             devs.push_back(st2i[name]);
         }
@@ -212,25 +158,26 @@ int main()
                 prttt(to);
 #endif
             }
-            gf.addEdge(st2i[from], st2i[to], INF);
+            add(st2i[from], st2i[to], INF);
         }
 
         int s = cnting++, t = cnting++;
+        ::s = s, ::t = t;
         for (auto dev : devs)
         {
-            gf.addEdge(s, dev, 1);
+            add(s, dev, 1);
         }
 
         for (auto pow : powers)
         {
-            gf.addEdge(pow, t, 1);
+            add(pow, t, 1);
         }
         if (ptBlank)
         {
             cout << '\n';
         }
         ptBlank = T;
-        cout << max(0ll, (long long)devs.size() -  gf.getMaxFlow(s, t)) << "\n";
+        cout << max(0ll, (long long)devs.size() -  EK()) << "\n";
     }
     return 0;
 }
