@@ -5,12 +5,10 @@
 #include <iomanip>
 #include <ios>
 #include <iostream>
-#include <queue>
 #include <utility>
 #include <vector>
 using std::cin;
 using std::cout;
-using std::priority_queue;
 using std::sqrt;
 using std::vector;
 template <typename T>
@@ -24,7 +22,7 @@ inline T min(T a, T b)
     return a < b ? a : b;
 }
 const int MAXN = 100 + 5;
-const long long INF = 0x3f3f3f3f3f3f3f3f;
+const double INF = 0x3f3f3f3f;
 struct Round
 {
     int x, y, z, r;
@@ -38,22 +36,18 @@ struct Round
     }
 };
 
-long long getDis(const Round& r1, const Round& r2)
+double getDis(const Round& r1, const Round& r2)
 {
-    auto dis2 = 0ll;
-    auto pow2 = [](auto v1, auto v2)
+    int dis2 = 0;
+    auto mult = [](int v1, int v2)
     {
         return (v1 - v2) * (v1 - v2);
     };
-    dis2 += pow2(r1.x, r2.x);
-    dis2 += pow2(r1.y, r2.y);
-    dis2 += pow2(r1.z, r2.z);
+    dis2 += mult(r1.x, r2.x);
+    dis2 += mult(r1.y, r2.y);
+    dis2 += mult(r1.z, r2.z);
 
-    auto radd = (long long)r1.r + r2.r;
-    radd *= radd;
-
-    // 四舍五入
-    return (dis2 < radd) ? 0 : int(sqrt(dis2) - r1.r - r2.r + 0.5);
+    return max(0.0, (sqrt(dis2) - r1.r - r2.r) * 10);
 }
 int main()
 {
@@ -62,7 +56,7 @@ int main()
     while (cin >> tmp && tmp != -1)
     {
         vector<Round> rnds;
-        vector<long long> dis(MAXN, INF);
+        vector<double> dis(MAXN, INF);
         for (int i = 0; i < tmp; i++)
         {
             int x, y, z, r;
@@ -85,7 +79,7 @@ int main()
         for (int cnt = 1; cnt < rnds.size(); cnt++)
         {
             size_t u = rnds.size();
-            long long minimal = INF;
+            double minimal = INF;
             for (int i = 0; i < rnds.size(); i++)
             {
                 if (!vis[i] && dis[i] < minimal)
@@ -112,7 +106,7 @@ int main()
             }
         }
 
-        cout << "Cheese " << ttt++ << ": Travel time = " << dis[t] * 10 << " sec\n";
+        cout << "Cheese " << ttt++ << ": Travel time = " << (int)(std::round(dis[t])) << " sec\n";
     }
     return 0;
 }
