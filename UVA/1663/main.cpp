@@ -122,11 +122,21 @@ class GetNetFlow
         return allFlow;
     }
 };
-set<int> is2powedSet;
+
+auto cntbit = [](int n)
+{
+    int cnt = 0;
+    while (n)
+    {
+        n &= n - 1;
+        cnt++;
+    }
+    return cnt;
+};
 
 auto is2pow = [](int n)
 {
-    return is2powedSet.count(n);
+    return cntbit(n) == 1;
 };
 
 class MyFlow : public GetNetFlow
@@ -134,29 +144,42 @@ class MyFlow : public GetNetFlow
     int add, ss, tt;
 
    public:
-    MyFlow(int n_) : GetNetFlow(n_ * 2 + 2), add(n_) {}
-    void build(const set<int> st)
+    MyFlow(int n_) : GetNetFlow(n_ * 2 + 10), add(n_) {}
+    void build(const set<int> & st)
     {
-        int cnt = 0;
-        ss = add * 2 + 1, tt = add * 2 + 2;
-        for (auto tem : st)
+        ss = st.size() * 2 + 1, tt = st.size() * 2 + 2;
+        int i = 0;
+        for (auto & tem : st)
         {
-            int cnt2 = add + 1;
-            for (auto tem2 : st)
+            if (cntbit(tem) % 2 == 1)
             {
-                if (tem == tem2)
-                {
-                    continue;
-                }
+                addEdge(i, tt, 1);
+            }
+            else
+            {
+                addEdge(ss, i, 1);
+            }
+            int j = 0;
+            for (auto & tem2 : st)
+            {
                 if (is2pow(tem ^ tem2))
                 {
-                    addEdge(cnt, cnt2, 1);
+                    if (cntbit(tem2) % 2 == 1)
+                    {
+                        addEdge(i, j, 1);
+                    }
+                    else
+                    {
+                        addEdge(j, i, 1);
+                    }
                 }
-                addEdge(cnt2, tt, 1);
-                cnt2++;
+                j++;
+                if (j >= i)
+                {
+                    break;
+                }
             }
-            addEdge(ss, cnt, 1);
-            cnt++;
+            i++;
         }
     }
     long long getAns()
@@ -168,16 +191,20 @@ class MyFlow : public GetNetFlow
 int main()
 {
     std::ios::sync_with_stdio(false);
-    int n;int m;
-    for (int i = 0; i < 11; i++)
-    {
-        is2powedSet.insert(1 << i);
-    }
-    
+    int n;
+    int m;
+
     while (cin >> n && cin >> m && n && m)
     {
         cin.get();
         set<int> templs;
+        auto ins = [&templs](int x)
+        {
+            if (!templs.count(x))
+            {
+                templs.insert(x);
+            }
+        };
         for (int i = 0; i < m; i++)
         {
             string str;
@@ -191,15 +218,12 @@ int main()
                 // 把 * 变成 1
                 t2 = (t2 << 1) | (ch != '0');
             }
-            templs.insert(t1);
-            if (t1 != t2)
-            {
-                templs.insert(t2);
-            }
+            ins(t1);
+            ins(t2);
         }
         MyFlow mf(templs.size() + 1);
         mf.build(templs);
-        cout << mf.getAns()/2 << '\n';
+        cout << templs.size() - mf.getAns() << '\n';
     }
     return 0;
 }
