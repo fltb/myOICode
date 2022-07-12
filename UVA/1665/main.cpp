@@ -47,13 +47,9 @@ class Solver {
      */
     unordered_map<int, vector<Point>> rec;
     class UnionSet {
-       public:
         unordered_map<Point, Point, hashPoint> fa;
         unordered_set<Point, hashPoint> roots;
-        UnionSet() {}
-        size_t rootNum() {
-            return roots.size();
-        }
+        int cnt;
         void inroot(const Point& x) {
             if (!roots.count(x)) {
                 roots.insert(x);
@@ -64,6 +60,17 @@ class Solver {
                 roots.erase(x);
             }
         }
+
+       public:
+        UnionSet() : cnt(0) {}
+        size_t rootNum() {
+            return roots.size();
+        }
+        void insert(const Point& x) {
+            fa[x] = x;
+            inroot(x);
+            cnt++;
+        }
         /**
          * @brief merge u to v (v as father)
          *
@@ -73,87 +80,88 @@ class Solver {
         void merge(const Point& u, const Point& v) {
             auto fau = find(u);
             auto fav = find(v);
-            fa[fau] = fav;
-            inroot(fav);
             if (fav == fau) {
                 return;
             }
+            fa[fau] = fav;
             outroot(fau);
+            cnt--;
         }
+
         Point find(const Point x) {
-            if (!fa.count(x) || fa[x] == x) {
+            if (fa[x] == x) {
                 return x;
             } else {
-                fa[x] = find(fa[x]);
-                return fa[x];
+                return fa[x] = find(fa[x]);
             }
+        }
+
+        bool contain(const Point& x) {
+            return fa.count(x);
         }
     };
 
    public:
     Solver(int n_, int m_) : n(n_), m(m_), graph(vector<vector<int>>(n_, vector<int>(m_, 0))) {}
-    void readMap(std::istream& is) {
+    void getAns(std::istream& is, std::ostream& os) {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 is >> graph[i][j];
             }
         }
-    }
-    void getAns(std::istream& is, std::ostream& os) {
+
         int c;
         is >> c;
         vector<int> qs;
-        qs.push_back(-1);
         for (int i = 0; i < c; i++) {
             int t;
             cin >> t;
             qs.push_back(t);
         }
+
         // 离散化
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 auto& here = graph[i][j];
                 auto pos = lower_bound(qs.begin(), qs.end(), here);
-                while (pos != qs.begin() && *pos >= here) {
-                    pos--;
-                }
                 if (pos != qs.begin()) {
-                    here = *pos;
+                    here = *(--pos);
                     rec[*pos].push_back(Point(i, j));
                 }
             }
         }
-        UnionSet us;
-        reverse(qs.begin(), qs.end());
-        // 从大到小
-        int dirs[2][4] = {
+
+        const int dirs[2][4] = {
             {1, 0, -1, 0},
             {0, 1, 0, -1}};
         auto valid = [&](const Point& po) {
             return (po.x >= 0 && po.x < n && po.y >= 0 && po.y < m);
         };
+        auto getVal = [&](const Point& x) {
+            return graph[x.x][x.y];
+        };
+        auto walk = [&dirs](const Point& x, int s) {
+            return Point(x.x + dirs[0][s], x.y + dirs[1][s]);
+        };
+
+        // 从大到小
+        UnionSet us;
+        reverse(qs.begin(), qs.end());
         vector<int> ans;
-        vector<vector<bool>> vis(n, vector<bool>(m, false));
         for (auto it : qs) {
-            if (it == -1) {
-                break;
-            }
             for (const auto& at : rec[it]) {
-                int i = at.x, j = at.y;
-                const auto& now = graph[i][j];
-                us.merge(at, at);
+                us.insert(at);
                 for (int k = 0; k < 4; k++) {
-                    Point to = Point(i + dirs[0][k], j + dirs[1][k]);
-                    const auto& val = graph[to.x][to.y];
-                    if (valid(to) && us.fa.count(to) && val >= now) {
-                        us.merge(to, at);
+                    Point to = walk(at, k);
+                    if (valid(to) && us.contain(to)) {
+                        us.merge(at, to);
                     }
                 }
             }
             ans.push_back(us.rootNum());
         }
 
-        std::reverse(ans.begin(), ans.end());
+        reverse(ans.begin(), ans.end());
         for (int i = 0; i < ans.size(); i++) {
             os << ans[i] << ((i + 1 == ans.size()) ? '\n' : ' ');
         }
@@ -172,7 +180,6 @@ int main() {
         int n, m;
         cin >> n >> m;
         Solver so(n, m);
-        so.readMap(cin);
         so.getAns(cin, cout);
     }
     return 0;
