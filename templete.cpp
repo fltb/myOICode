@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdio>
 #include <algorithm>
+#define cosnt const;
 using std::cin;
 using std::cout;
 template <typename T> inline void read(T& t) {
