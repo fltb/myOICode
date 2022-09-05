@@ -3,15 +3,15 @@
 #include <functional>
 #include <ios>
 #include <iostream>
+#include <queue>
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <queue>
 #define cosnt const;
 using std::cin;
 using std::cout;
-using std::vector;
 using std::queue;
+using std::vector;
 template <typename T>
 inline void read(T& t) {
     int f = 0, c = std::getchar();
@@ -38,10 +38,10 @@ struct Edge {
         return from == u ? v : u;
     }
     void setD(int from) {
-        dir = from == u ? 1 : 2;
+        dir = from == u ? 2 : 1;
     }
     void setDR(int from) {
-        dir = from == u ? 2 : 1;
+        dir = from == u ? 1 : 2;
     }
     void clsD() {
         dir = 0;
@@ -69,9 +69,10 @@ vector<int> nd[MAXN];
     ADD：
     好像那个“叛逃”的思路不太行，那换一个思路，记录经过每条边去 S 和 T 的流量，然后把总流量减去这条边的流量
     找到最小的那条边之后再进行建树的操作，如何？
+    找出所有割边，统计通过所有边的去 S 和 去 T 的节点数量(cnt)，然后去找 cnt * c 最大的那条边
 */
-int dp[MAXN], TtoN[MAXN], StoN[MAXN], state[MAXN];
-long long sum = 0;
+long long dp[MAXN], TtoN[MAXN], StoN[MAXN], cntT[MAXN], cntS[MAXN], state[MAXN];
+long long sum = 0; int targerE = 0;
 void dfsD(int x, int fa, std::function<void(int, int, int)> run) {
     for (auto id : nd[x]) {
         auto& e = es[id];
@@ -84,12 +85,14 @@ void dfsD(int x, int fa, std::function<void(int, int, int)> run) {
 }
 void dfsT() {
     dfsD(t, -1, std::function<void(int, int, int)>([](int x, int fa, int dis) {
-             TtoN[x] = dis + TtoN[fa];
+             if (fa != -1)
+                 TtoN[x] = dis + TtoN[fa];
          }));
 }
 void dfsS() {
     dfsD(s, -1, std::function<void(int, int, int)>([](int x, int fa, int dis) {
-             StoN[x] = dis + StoN[fa];
+             if (fa != -1)
+                 StoN[x] = dis + StoN[fa];
          }));
 }
 void recState() {
@@ -97,61 +100,82 @@ void recState() {
         state[i] = es[i].dir;
     }
 }
-// 现在形成一个初始的状态
-int iniEdge = 0;
-void dfsIniT(int x, int fa) {
+// 现在找到所有的割边
+queue<int> iniEdges;
+bool getIniEdge(int x, int fae) {
+    if (x == s) {
+        cntT[fae] = 0;
+        return true;
+    }
+    sum += TtoN[x];
     for (auto id : nd[x]) {
         auto& e = es[id];
         auto to = e.to(x);
-        if (to == s) {
-            iniEdge = id;
-            continue;
-        }
-        if (to != fa) {
-            e.setD(x);
-            sum += TtoN[to];
-            dfsIniT(to, x);
+        if (id != fae) {
+            if (getIniEdge(to, id)) {
+                iniEdges.push(id);
+                cntT[fae] += cntT[id];
+                return true;
+            } else {
+                cntT[fae] += cntT[id];
+            }
         }
     }
+    return false;
 }
-void dfsIniS(int x, int fa) {
+void getSSum(int x, int fae) {
+    if (x == t) {
+        cntS[fae] = 0;
+        return;
+    }
+    sum += TtoN[x];
     for (auto id : nd[x]) {
         auto& e = es[id];
         auto to = e.to(x);
-        if (to != fa && id != iniEdge) {
-            e.setD(x);
-            sum += StoN[to];
-            dfsIniS(to, x);
+        if (id != fae) {
+            getSSum(to, id);
+            cntS[fae] += cntS[id];
         }
     }
 }
+
 void Init() {
     dfsT();
     dfsS();
-    dfsIniT(t, -1);
-    dfsIniS(s, -1);
-    recState();
-    dp[s] = sum;
+    for (int i = 1; i <= n; i++) {
+        cntS[i] = cntT[i] = 1;
+    }
+    getIniEdge(t, 0);
+    getSSum(s, 0);
 }
 // 最后进行求解
-void bfsDP() {
-    queue<std::pair<int,int>>q;
-    q.push(std::make_pair(es[iniEdge].to(s), iniEdge));
-    while (!q.empty()) {
-        auto x = q.front().first, fe = q.front().second;
-        q.pop();
-        // 现在开始“叛逃”
-        dp[x] = dp[es[fe].to(x)] + StoN[x] - TtoN[x];
-        es[fe].setDR(x);
-        if (dp[x] < sum) {
-            sum = dp[x];
-            recState();
+void getTarget() {
+    long long mx = 0;
+    while (!iniEdges.empty()) {
+        auto id  = iniEdges.front();
+        iniEdges.pop();
+        if (mx < (long long)(cntS[id] + cntT[id])*es[id].c) {
+            mx = (long long)(cntS[id] + cntT[id])*es[id].c;
+            targerE = id;
         }
-        for (auto id : nd[x]){
-            auto& e = es[id];
-            if (id != fe && e.to(x) != t) {
-                q.push(std::make_pair(e.to(x), id));
-            }
+    }
+}
+
+void setState(int x, int fa) {
+    for (auto id : nd[x]) {
+        auto& e = es[id];
+        if (id != targerE && e.to(x) != fa) {
+            e.setD(x);
+            setState(e.to(x), x);
+        }
+    }
+}
+
+void getAns() {
+    sum = 0;
+    for (int i = 1; i <= n; i++) {
+        if (i != s && i != t) {
+            sum += min(StoN[i], TtoN[i]);
         }
     }
 }
@@ -166,7 +190,12 @@ int main() {
         nd[v].push_back(i);
     }
     Init();
-    bfsDP();
+        getAns();
+
+    getTarget();
+    setState(s, -1);
+    setState(t, -1);
+    recState();
     cout << sum << '\n';
     for (int i = 1; i < n; i++) {
         cout << state[i];
