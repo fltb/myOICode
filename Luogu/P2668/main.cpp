@@ -7,9 +7,11 @@
 #include <ios>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #define cosnt const;
 using std::cin;
 using std::cout;
+using std::unordered_map;
 template <typename T>
 inline T max(T a, T b) {
     return a < b ? b : a;
@@ -185,7 +187,8 @@ bool boombTwo(long long from, int d) {
                 if (i != j && getNum(st, j) >= 2) {
                     auto aPair = changeNum(st, j, -2);
                     dfs(aPair, d + 1, BOOMB_TWO);
-                    for (int k = j + 1; k <= 13; k++) {
+                    // 四带二居然可以一样！
+                    for (int k = j; k <= 13; k++) {
                         if (getNum(aPair, k) >= 2) {
                             dfs(changeNum(aPair, k, -2), d + 1, BOOMB_TWO);
                         }
@@ -242,6 +245,7 @@ void ptSt(long long st) {
 long long ss[200];
 #endif
 int ans = MAXD;
+unordered_map<long long, int> rec;
 void dfs(long long st, int d, int restrict) {
 #ifdef FLOATINGBLOCKS
     ss[d] = st;
@@ -249,72 +253,19 @@ void dfs(long long st, int d, int restrict) {
     if (d >= ans) {  // 你已经没有价值了~
         return;
     }
+    if (rec.count(st)) {
+        if (rec[st] <= d) { // 你还搜什么呢？
+            return;
+        }
+    }
+    rec[st] = d;
     if (!st) {  // 无了
         ans = min(ans, d);
-#ifdef FLOATINGBLOCKS
-        cout << ans << ":\n";
-        for (int i = 0; i < ans; i++) {
-            ptSt(ss[i]);
-        }
-#endif
     }
     for (int i = restrict; i < 4; i++) {
         methods[i](st, d);
     }
 }
-
-/*
-
-bool testCases() {
-    long long iniSt = 0;
-    for (int i = 1; i <= 10; i++) {
-        iniSt = changeNum(iniSt, i, 3);
-    }
-    vector<long long> store;
-    auto ptSt = [](long long st) {
-        for (int i = 1; i <= 10; i++) {
-            cout << getNum(st, i) << ' ';
-        }
-        cout << std::endl;
-    };
-    auto ptS = [&ptSt](vector<long long>& store) {
-        for (auto& st : store) {
-            ptSt(st);
-        }
-    };
-    ptSt(iniSt);
-    if (methods[LINERS](iniSt, store)) {
-        cout << "Pass Liners: ";
-        ptS(store);
-    } else {
-        cout << "Liners Error";
-        return false;
-    }
-    store.clear();
-    iniSt = 0;
-    iniSt = changeNum(0, 3, 4);
-    iniSt = changeNum(iniSt, 1, 2);
-    iniSt = changeNum(iniSt, 2, 1);
-    iniSt = changeNum(iniSt, 5, 3);
-
-    if (methods[THREE_ONE_TWO](iniSt, store)) {
-        cout << "Pass three";
-        ptS(store);
-    } else {
-        cout << "THREE TWO ONE Error";
-        return false;
-    }
-    store.clear();
-    if (methods[BOOMB_TWO](iniSt, store)) {
-        cout << "Pass BOOM:\n";
-        ptS(store);
-    } else {
-        cout << "BOOM Error\n";
-        return false;
-    }
-    return true;
-}*/
-
 int main() {
 #ifdef FLOATINGBLOCKS
     int testing[15];
@@ -325,6 +276,7 @@ int main() {
     cin >> T >> n;
     while (T--) {
         long long iniSt = 0;
+        rec.clear();
 #ifdef FLOATINGBLOCKS
         for (int i = 0; i <= 14; i++) {
             testing[i] = 0;
