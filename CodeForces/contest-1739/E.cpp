@@ -29,8 +29,13 @@ inline T min(T a, T b) {
 }
 const int MAXN = 2e5 + 2;
 
+/*
+dp[当前列][当前行][上次在哪行] = 到达当前格子的时候最大的值
+dp[MAXN][2][2]
+*/
 int main() {
 // 哪天接着写好了
+
 }
 
 /**
