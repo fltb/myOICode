@@ -5,7 +5,14 @@ using std::cout;
 typedef long long ll;
 const int MAXN = 100000 + 2,
           MAXT = 1 << 30;
-
+template <typename T>
+inline T max(T a, T b) {
+    return a < b ? b : a;
+}
+template <typename T>
+inline T min(T a, T b) {
+    return a < b ? a : b;
+}
 struct Node {
     ll id,
         l,
@@ -110,28 +117,51 @@ ll query(ll cur, ll original_l, ll original_r) {
     }
     return time;
 }
-
+const int MAXNN = 5000 + 2, LIMIT = 1 << 30;
+ll FFNUM = 0x7fffffff;
+ll dp[MAXNN][MAXNN];
 int main() {
     std::ios::sync_with_stdio(false);
     ll n, m;
     cin >> n >> m;
+
     for (int i = 1; i <= n; ++i) {
         cin >> a[i];
+        dp[i][i] = a[i];
     }
-
-    build(1, 1, n);
 
     for (int i = 0; i < m; ++i) {
         int md;
         cin >> md;
         if (md == 1) {
-            ll x, y, k;
-            cin >> x >> y >> k;
-            update(1, x, y, k);
+            ll x, y;
+            cin >> x >> y;
+            a[x] = y;
+            for (int i = 1; i <= n; i++) {
+                for (int j = 1; j <= n; j++) {
+                    dp[i][j] = (j == i) ? a[i] : 1;
+                }
+            }
         } else if (md == 2) {
             ll x, y;
             cin >> x >> y;
-            cout << query(1, x, y) << '\n';
+            auto re = [&]() {
+                for (int len = 2; len <= y - x + 1; len++) {
+                    for (int i = x; i + len - 1 <= y; i++) {
+                        int j = i + len - 1;
+                        dp[i][j] = max(max(a[i], a[j]), max(dp[i][j - 1], dp[i][j - 1] * a[j]));
+                        if (dp[i][j] > LIMIT) {
+                            return FFNUM;
+                        }
+                    }
+                }
+                return dp[x][y];
+            }();
+            if (re != FFNUM) {
+                cout << max(1ll, re) << '\n';
+            } else {
+                cout << "Too large\n";
+            }
         } else {
             cout << "FUCKCCF!!!"
                  << "禁赛一年!!!"

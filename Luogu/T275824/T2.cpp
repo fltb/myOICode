@@ -30,7 +30,7 @@ const ll INF = 0x00033fffffffffff;
 ll f[MAXN];
 int n, sz[MAXN];
 std::vector<int> tree[MAXN];
-// 所有子树被清空时： 当前节点，子树当中先前已经无了的 = 当前状态最小代价
+// 当前节点编号，所有子树当中先前已经无了几个 = 当前状态最小代价
 ll dp[MAXN][MAXN];
 int dfsZ(int x, int fa) {
     sz[x] = 1;
@@ -46,36 +46,44 @@ int dfsZ(int x, int fa) {
 }
 
 void dfs(int x, int fa) {
+    // 当时我就不炸了
+    dp[x][0] = 0;
     for (auto to : tree[x]) {
         if (to != fa) {
             dfs(to, x);
         }
     }
-    // 原地爆炸
-    dp[x][0] = f[sz[x]];
     // 来吧，背包！
+    int ss = 0;
     for (auto to : tree[x]) {
         if (to != fa) {
-            for (int i = 0; i < sz[to]; i++) {
-                if (dp[to][i] != -1) {    // 在先前的爆炸的基础上面
-                    auto s = sz[to] - 1;  // 先前爆炸掉了的个数
-                    // j 是当前节点子树爆炸了的个数
-                    for (int j = sz[x] - 1; j - s >= 0; j--) {
-                        //  假如先前有可以达到 j - s 状态的方法
-                        if (dp[x][j - s] != -1) {
-                            // 从 j - s 转到 j 所需要的代价
-                            auto tVal = dp[x][j - s] - f[sz[x] - (j - s)] + dp[to][i] + f[sz[x] - j];
-                            if (dp[x][j] == -1) {
-                                dp[x][j] = tVal;
-                            } else {
-                                dp[x][j] = min(dp[x][j], tVal);
-                            }
+            ss += sz[x];
+            // j 是当前节点的所有子树爆炸了的节点个数
+            for (int j = ss - 1; j > 0; j--) {
+                for (int i = max(j - ss + sz[to], 1); i <= min(sz[to] - 1, j); i++) {
+                    if (dp[to][i] != -1 && dp[x][j - i] != -1) {  // 在先前的爆炸的基础上面 假如先前有可以达到 j 状态的方法
+                        // 从 j - i 转到 j 所需要的代价
+                        auto tVal = dp[x][j - i] + dp[to][i];
+                        if (dp[x][j] == -1) {
+                            dp[x][j] = tVal;
+                        } else {
+                            dp[x][j] = min(dp[x][j], tVal);
                         }
                     }
                 }
             }
         }
     }
+    // 收个尾，我原地爆炸~
+    dp[x][sz[x] - 1] = f[sz[x]];
+    for (int i = 0; i < sz[x] - 1; i++) {
+        if (dp[x][i] == -1) {
+            continue;
+        }
+        auto v = dp[x][i] + f[sz[x] - i];
+        dp[x][sz[x] - 1] = min(dp[x][sz[x] - 1], v);
+    }
+
 #ifdef FLOATINGBLOCK
     cout << "At " << x << " :\n";
     for (int i = 0; i < sz[x]; i++) {
@@ -94,8 +102,7 @@ int main() {
     freopen("T2ex2.in", "r", stdin);
 #endif
     cin >> n;
-    f[1] = -1;
-    f[n] = -1;
+    f[1] = 0;
     for (int i = 2; i <= n; i++) {
         cin >> f[i];
     }
@@ -107,12 +114,7 @@ int main() {
     }
     dfsZ(1, -1);
     dfs(1, -1);
-    ll ans = INF;
-    for (int i = 0; i < sz[1]; i++) {
-        if (dp[1][i] != -1) {
-            ans = min(ans, dp[1][i]);
-        }
-    }
-    cout << ans << '\n';
+
+    cout << dp[1][sz[1] - 1] << '\n';
     return 0;
 }
