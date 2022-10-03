@@ -54,6 +54,7 @@ void dfs(int x, int fa) {
         }
     }
     // 来吧，背包！
+    int ss = 0;
     for (auto to : tree[x]) {
         if (to != fa) {
             ss += sz[x];
