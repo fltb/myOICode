@@ -24,11 +24,11 @@ inline T min(T a, T b) {
     return a < b ? a : b;
 }
 const int MAXN = 200000 + 5;
-int a[MAXN], n, rooted[MAXN], root;
+int ps[MAXN], n, rooted[MAXN], root;
 int vis[MAXN], tme;
 void dfs(int x) {
     vis[x] = tme;
-    if (a[x] == x) { // 我是自环
+    if (ps[x] == x) { // 我是自环
         if (root) {
             rooted[x] = root; // 你不是
         } else {
@@ -50,9 +50,9 @@ int main() {
     std::ios::sync_with_stdio(false);
     cin >> n;
     for (int i = 1; i <= n; i++) {
-        cin >> a[i];
-        rooted[i] = a[i];
-        if (a[i] == i) {
+        cin >> ps[i];
+        rooted[i] = ps[i];
+        if (ps[i] == i) {
             root = i;
         }
     }
@@ -64,7 +64,7 @@ int main() {
     }
     int cnt = 0;
     for (int i = 1; i <= n; i++) {
-        cnt += a[i] != rooted[i];
+        cnt += ps[i] != rooted[i];
     }
     cout << cnt << '\n';
     for (int i = 1; i <= n; i++) {
