@@ -73,6 +73,6 @@ int main() {
             }
         }
     }
-    cout << dp[n & 1][m][k][0] + dp[n & 1][m][k][1] << '\n';
+    cout << (dp[n & 1][m][k][0] + dp[n & 1][m][k][1]) % MOD << '\n';
     return 0;
 }
