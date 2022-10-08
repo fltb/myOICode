@@ -26,47 +26,43 @@ inline T min(T a, T b) {
     return a < b ? a : b;
 }
 const int MAXN = 100 + 2;
-const int MODS[] = {10000723,
-                     10000591,
-                     10000591,
-                     10000769,
-                     10000223,
-                     10000103,
-                     10000763,
-                     10000733,
-                     10000723,
-                     10000721,
-                     10000691,
-                     10000849};  // 数学题目和七个大质数的故事~
-long long red(int MOD) {
+const int MODS[] = {
+    10433,
+    100000399,
+    1000000403,
+};  // 数学题目和几个大质数的故事~
+void red(long long& t1, long long& t2, long long& t3) {
     int f = 0, c = std::getchar();
-    long long t = 0;
+    t1 = t2 = t3 = 0;
     while (!std::isdigit(c)) f |= c == '-', c = std::getchar();
-    while (std::isdigit(c)) t = t * 10 + c - 48, t %= MOD, c = std::getchar();
+    while (std::isdigit(c)) t1 = t1 * 10 + c - 48, t1 %= MODS[0], t2 = t2 * 10 + c - 48, t2 %= MODS[1], t3 = t3 * 10 + c - 48, t3 %= MODS[2], c = std::getchar();
     if (f)
-        t = -t;
-    return t;
+        t1 = -t1, t2 = -t2, t3 = -t3;
 }
-long long a[MAXN];
+long long a[MAXN][3];
 long long ans[MAXN], cnt;
 int main() {
     std::ios::sync_with_stdio(false);
-    srand(std::time(0) + 114);
-    auto md = rand() % 12;
-    const auto MOD = MODS[md];
     int n, m;
     read(n), read(m);
 
     for (int i = 0; i <= n; i++) {
-        a[i] = red(MOD);
+        red(a[i][0], a[i][1], a[i][2]);
     }
 
     for (int x = 1; x <= m; x++) {
-        long long cal = 0;
-        for (int i = n; i >= 1; i--) {
-            cal = (a[i] + cal) * x % MOD;
+        bool is = true;
+        for (int m = 0; m < 2; m++) {
+            long long cal = 0;
+            for (int i = n; i >= 1; i--) {
+                cal = (a[i][m] + cal) * x % MODS[m];
+            }
+            if ((cal + a[0][m]) % MODS[m] != 0) {
+                is = false;
+                break;
+            }
         }
-        if ((cal + a[0]) % MOD == 0) {
+        if (is) {
             ans[++cnt] = x;
         }
     }
