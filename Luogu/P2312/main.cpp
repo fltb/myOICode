@@ -39,7 +39,7 @@ void red(long long& t1, long long& t2, long long& t3) {
     if (f)
         t1 = -t1, t2 = -t2, t3 = -t3;
 }
-long long a[MAXN][3];
+long long arr[MAXN][3];
 long long ans[MAXN], cnt;
 int main() {
     std::ios::sync_with_stdio(false);
@@ -47,7 +47,7 @@ int main() {
     read(n), read(m);
 
     for (int i = 0; i <= n; i++) {
-        red(a[i][0], a[i][1], a[i][2]);
+        red(arr[i][0], arr[i][1], arr[i][2]);
     }
 
     for (int x = 1; x <= m; x++) {
@@ -55,9 +55,9 @@ int main() {
         for (int m = 0; m < 2; m++) {
             long long cal = 0;
             for (int i = n; i >= 1; i--) {
-                cal = (a[i][m] + cal) * x % MODS[m];
+                cal = (arr[i][m] + cal) * x % MODS[m];
             }
-            if ((cal + a[0][m]) % MODS[m] != 0) {
+            if ((cal + arr[0][m]) % MODS[m] != 0) {
                 is = false;
                 break;
             }
