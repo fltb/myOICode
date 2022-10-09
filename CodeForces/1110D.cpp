@@ -4,7 +4,8 @@
 #include <functional>
 #include <ios>
 #include <iostream>
-#define cosnt const;
+#include <vector>
+#define cosnt const
 using std::cin;
 using std::cout;
 template <typename T>
@@ -24,63 +25,83 @@ template <typename T>
 inline T min(T a, T b) {
     return a < b ? a : b;
 }
-const int LEN = 3, MODE = 2;
-int arr[2]{-1, -1};  // 顺手滚动数组
-int dp[2][LEN][MODE];
-const std::function<bool(int, int)> methods[] = {
-    [](int a, int b) {  // solid
-        return a == b;
-    },
-    [](int a, int b) {  // liner
-        return a == b + 1;
-    }};
-bool valid(int mode, int i) {
-    return methods[mode](arr[i & 1], arr[(i + 1) & 1]);
-}
 void update(int& a, int b) {
     a = max(a, b);
 }
+const int MAXN = 1000000 + 2, LEN = 3;
+int cnt[MAXN];
+// [当前值(roll)] [作为第几位] [选择几个作为 liner (剩下就是 solid)] = 当前最多的值
+int dp[2][3][MAXN];
 int main() {
-    std::ios::sync_with_stdio(false);
     int n, m;
     cin >> n >> m;
-    for (int idx = 1; idx < LEN; idx++) {
-        for (int mode = 0; mode < MODE; mode++) {
-            dp[0][idx][mode] = -1;  // disable these situation
-        }
+    for (int i = 1; i <= n; i++) {
+        int a;
+        cin >> a;
+        cnt[a]++;
     }
-    for (int cur = 1; cur <= n; cur++) {
-        auto now = cur & 1, pre = (cur + 1) & 1;
-        cin >> arr[now];
-        int mx = 0;
-        for (int idx = 0; idx < LEN; idx++) {
-            for (int md = 0; md < MODE; md++) {
-                update(mx, dp[pre][idx][md]);
-            }
-        }
-        for (int md = 0; md < MODE; md++) {
-            dp[now][0][md] = mx;
-        }
-        for (int idx = 1; idx < LEN; idx++) {
-            for (int md = 0; md < MODE; md++) {
-                dp[now][idx][md] = -1;
-                if (valid(md, now)) {
-                    update(dp[now][idx][md], dp[pre][idx - 1][md]);
-                }
-            }
-        }
-        for (int md = 0; md < MODE; md++) {
-            if (dp[now][LEN - 1][md] != -1) {
-                dp[now][LEN - 1][md]++;
-            }
+    for (int j = 0; j < LEN; j++) {
+        for (int i = 0; i <= max(cnt[0], cnt[1]); i++) {
+            dp[0][j][i] = -1;
         }
     }
     auto ans = 0;
-    for (int idx = 0; idx < LEN; idx++) {
-        for (int md = 0; md < MODE; md++) {
-            update(ans, dp[n & 1][idx][md]);
+    for (int a = 1; a <= m; a++) {
+        auto now = a & 1, pre = (a + 1) & 1;
+        // 重新初始化，覆盖
+        for (int j = 0; j < LEN; j++) {
+            for (int i = 0; i <= max(cnt[a], cnt[a + 1]); i++) {
+                dp[now][j][i] = -1;
+            }
+        }
+        // 从上个状态转移过来，就是从之前所有状态转移到从现在开始，只有一个状态可以选择，所以选最大
+        int mx = 0;
+        for (int c = 0; c <= cnt[a - 1]; c++) {
+            for (int idx = 0; idx < LEN; idx++) {
+                update(mx, dp[pre][idx][c]);
+            }
+        }
+        for (int c = 0; c <= cnt[a]; c++) {
+            dp[now][0][c] = mx + (cnt[a] - c) / LEN;  // 加上将当前作为 solid 的贡献
+        }
+        for (int idx = 1; idx < LEN; idx++) {
+            for (int c = 1; c <= cnt[a]; c++) {
+                dp[now][idx][c] = -1;
+                if (dp[pre][idx - 1][c] != -1) {
+                    update(dp[now][idx][c], dp[pre][idx - 1][c] + (cnt[a] - c) / LEN);
+                }
+            }
+        }
+        for (int c = 0; c <= cnt[a]; c++) {
+            if (dp[now][LEN - 1][c] != -1) {
+                dp[now][LEN - 1][c] += c;  // 前面的的加过了
+            }
+        }
+        // 还有一个方程，是当前如果有能够接上 c 个 liner 的时候，其余的同级的 c' < cnt[a] - c 的都可以加上它，不过互斥
+        // 加上这个的时候还要减去之前的重复状态啊啊啊if
+        mx = 0;
+        for (int c = 1; c <= cnt[a]; c++) {
+            if (dp[now][LEN - 1][c] != -1) {
+                update(mx, c);  // 不知道对不对管他呢
+            }
+            for (int idx = 1; idx < LEN - 1; idx++) {
+                auto cnow = cnt[a] - c;
+                if (cnt[a - 1] - cnow >= c) { // 剪掉这个还能满足
+                    dp[now][idx][cnow] += mx;
+                }
+            }
+        }
+        for (int idx = 0; idx < LEN; idx++) {
+            for (int c = 0; c <= cnt[a]; c++) {
+                update(ans, dp[now][idx][c]);
+                ans = ans;
+            }
         }
     }
     cout << ans << '\n';
     return 0;
 }
+/*
+12 6
+1 2 3 3 3 3 3 3 3 4 5 5
+*/
