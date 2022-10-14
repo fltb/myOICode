@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <ios>
 #include <iostream>
-#define cosnt const;
+#define cosnt const
 using std::cin;
 using std::cout;
 template <typename T>
