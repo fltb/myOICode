@@ -78,7 +78,7 @@ struct Edge {
     Edge(int uu, int vv, int mm, int tt, double pp, int dd) : u(uu), v(vv), departureTime(mm), standardJourneyTime(tt), probabilityOfDelays(pp / 100), maximumDelay(dd) {}
     int to(int x) { return x == u ? v : u; }
 };
-const int MAXN = 1000 + 2, MAXS = 60;
+const int MAXN = 2000 + 2, MAXS = 60;
 const double INFD = 1e12 + 5;
 int n;
 unordered_map<string, int> mp;
